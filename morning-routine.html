@@ -1,0 +1,642 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Morning Routine</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0c0c10;
+    --surface: #14141c;
+    --surface2: #1c1c28;
+    --border: #2a2a3a;
+    --accent: #7c6af7;
+    --accent2: #4ade80;
+    --accent3: #f59e0b;
+    --accent4: #38bdf8;
+    --accent5: #f472b6;
+    --text: #e8e8f0;
+    --muted: #666680;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    padding: 0 0 60px;
+  }
+
+  .wrap { max-width: 480px; margin: 0 auto; padding: 0 16px; }
+
+  .header {
+    padding: 36px 16px 20px;
+    max-width: 480px; margin: 0 auto; position: relative;
+  }
+  .header-glow {
+    position: absolute; top: -40px; left: 50%; transform: translateX(-50%);
+    width: 320px; height: 180px;
+    background: radial-gradient(ellipse, #7c6af718 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .header-top { display: flex; justify-content: space-between; align-items: flex-start; }
+  .greeting { font-family: 'DM Serif Display', serif; font-size: 28px; line-height: 1.15; }
+  .greeting em { font-style: italic; color: var(--accent); }
+  .date-chip {
+    font-size: 11px; color: var(--muted); background: var(--surface2);
+    border: 1px solid var(--border); border-radius: 20px;
+    padding: 5px 10px; margin-top: 4px; white-space: nowrap;
+  }
+  .workout-day-badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    margin-top: 10px; font-size: 12px; font-weight: 600;
+    padding: 5px 12px; border-radius: 20px; border: 1px solid;
+  }
+  .workout-day-badge.yoga    { color: #a78bfa; border-color: #a78bfa44; background: #a78bfa11; }
+  .workout-day-badge.run     { color: var(--accent4); border-color: #38bdf844; background: #38bdf811; }
+  .workout-day-badge.stretch { color: var(--accent2); border-color: #4ade8044; background: #4ade8011; }
+  .workout-day-badge.rest    { color: var(--muted); border-color: var(--border); background: var(--surface2); }
+
+  .progress-section { padding: 0 16px 20px; max-width: 480px; margin: 0 auto; }
+  .progress-row { display: flex; align-items: center; gap: 14px; }
+  .progress-bar-wrap { flex: 1; }
+  .progress-label {
+    display: flex; justify-content: space-between;
+    font-size: 11px; color: var(--muted); margin-bottom: 6px;
+    text-transform: uppercase; letter-spacing: 0.5px;
+  }
+  .progress-bar { height: 5px; background: var(--surface2); border-radius: 10px; overflow: hidden; }
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+    border-radius: 10px;
+    transition: width 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  .streak-pill {
+    display: flex; align-items: center; gap: 4px;
+    background: var(--surface2); border: 1px solid #f59e0b33;
+    border-radius: 20px; padding: 5px 11px;
+    font-size: 12px; font-weight: 600; color: var(--accent3); white-space: nowrap;
+  }
+
+  .habits { display: flex; flex-direction: column; gap: 8px; }
+
+  .habit-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 16px; overflow: hidden; transition: border-color 0.25s;
+  }
+  .habit-card.completed { border-color: #4ade8044; }
+  .habit-card.inactive  { opacity: 0.32; pointer-events: none; }
+
+  .habit-main {
+    display: flex; align-items: center; gap: 12px;
+    padding: 14px 16px; cursor: pointer; user-select: none;
+  }
+  .habit-icon { font-size: 22px; min-width: 30px; text-align: center; }
+  .habit-body { flex: 1; min-width: 0; }
+  .habit-name { font-size: 14px; font-weight: 600; }
+  .habit-card.completed .habit-name { color: var(--muted); text-decoration: line-through; }
+  .habit-sub  { font-size: 11px; color: var(--muted); margin-top: 2px; }
+  .habit-streak { font-size: 10px; color: var(--accent3); font-weight: 600; margin-top: 2px; }
+
+  .check-circle {
+    width: 26px; height: 26px; border-radius: 50%;
+    border: 2px solid var(--border);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; flex-shrink: 0; transition: all 0.2s; color: transparent;
+  }
+  .habit-card.completed .check-circle { background: var(--accent2); border-color: var(--accent2); color: #000; }
+
+  .expand-toggle {
+    background: none; border: none; color: var(--muted); font-size: 10px;
+    padding: 4px 6px; cursor: pointer; display: flex; align-items: center;
+    border-radius: 8px; transition: color 0.2s, background 0.2s;
+  }
+  .expand-toggle:hover { color: var(--text); background: var(--surface2); }
+  .expand-arrow { display: inline-block; transition: transform 0.25s; }
+  .expand-arrow.open { transform: rotate(180deg); }
+  .rest-tag { font-size: 10px; background: var(--surface2); color: var(--muted); padding: 3px 8px; border-radius: 10px; }
+
+  .workout-type-chip {
+    font-size: 11px; font-weight: 600; padding: 3px 9px; border-radius: 10px; flex-shrink: 0;
+  }
+  .workout-type-chip.yoga    { color: #a78bfa; background: #a78bfa14; border: 1px solid #a78bfa33; }
+  .workout-type-chip.run     { color: var(--accent4); background: #38bdf814; border: 1px solid #38bdf833; }
+  .workout-type-chip.stretch { color: var(--accent2); background: #4ade8014; border: 1px solid #4ade8033; }
+
+  .subtasks { max-height: 0; overflow: hidden; transition: max-height 0.4s cubic-bezier(0.4,0,0.2,1); }
+  .subtasks.open { max-height: 1000px; }
+  .subtask-inner { border-top: 1px solid var(--border); padding: 8px 12px 14px; }
+
+  .sub-group-label {
+    font-size: 10px; text-transform: uppercase; letter-spacing: 0.8px;
+    color: var(--muted); padding: 8px 6px 4px;
+  }
+
+  .subtask-row {
+    display: flex; align-items: center; gap: 10px;
+    padding: 9px 10px; border-radius: 10px;
+    cursor: pointer; user-select: none; transition: background 0.15s;
+  }
+  .subtask-row:active { background: var(--surface2); }
+  .subtask-row.rest-sub { opacity: 0.35; pointer-events: none; }
+
+  .sub-check {
+    width: 20px; height: 20px; border-radius: 6px;
+    border: 1.5px solid var(--border);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 10px; flex-shrink: 0; transition: all 0.15s; color: transparent;
+  }
+  .subtask-row.done .sub-check { background: var(--accent2); border-color: var(--accent2); color: #000; }
+  .sub-name { font-size: 13px; flex: 1; }
+  .subtask-row.done .sub-name { color: var(--muted); text-decoration: line-through; }
+
+  .sub-tag {
+    font-size: 10px; padding: 2px 7px; border-radius: 10px;
+    background: var(--surface2); color: var(--muted); white-space: nowrap;
+  }
+  .sub-tag.yoga    { color: #a78bfa; background: #a78bfa14; }
+  .sub-tag.run     { color: var(--accent4); background: #38bdf814; }
+  .sub-tag.stretch { color: var(--accent2); background: #4ade8014; }
+  .sub-tag.alt     { color: var(--accent); background: #7c6af714; }
+  .sub-tag.coffee  { color: var(--accent3); background: #f59e0b14; }
+  .sub-tag.reflect { color: var(--accent5); background: #f472b614; }
+  .sub-tag.laundry { color: #60a5fa; background: #60a5fa14; }
+
+  /* Reflection prompts */
+  .reflection-prompt {
+    background: var(--surface2); border-radius: 10px; padding: 10px 12px; margin: 4px 0;
+  }
+  .prompt-q    { font-size: 11px; font-weight: 600; color: var(--accent5); margin-bottom: 4px; }
+  .prompt-hint { font-size: 11px; color: var(--muted); line-height: 1.5; }
+
+  /* App link rows */
+  .app-link-row {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 10px; border-radius: 10px;
+    cursor: pointer; text-decoration: none;
+    transition: background 0.15s;
+    margin-top: 4px;
+  }
+  .app-link-row:hover { background: var(--surface2); }
+  .app-link-row + .app-link-row { border-top: 1px solid var(--border); margin-top: 0; }
+
+  .app-links-group {
+    border-top: 1px solid var(--border);
+    margin-top: 8px;
+  }
+
+  .app-link-icon { font-size: 18px; min-width: 26px; text-align: center; }
+  .app-link-label { font-size: 13px; font-weight: 500; flex: 1; }
+  .app-link-label.cal      { color: var(--accent4); }
+  .app-link-label.reminders { color: #ff6b6b; }
+  .app-link-label.today    { color: var(--accent3); }
+  .app-link-arrow { font-size: 11px; color: var(--muted); }
+
+  .done-banner {
+    background: linear-gradient(135deg, #4ade8012, #7c6af712);
+    border: 1px solid #4ade8030; border-radius: 16px;
+    padding: 20px; text-align: center; margin-bottom: 16px;
+    display: none; animation: fadeUp 0.4s ease;
+  }
+  .done-banner.show { display: block; }
+  .done-banner .big { font-size: 30px; margin-bottom: 8px; }
+  .done-banner h3 { font-family: 'DM Serif Display', serif; font-size: 20px; }
+  .done-banner p  { font-size: 12px; color: var(--muted); margin-top: 4px; }
+
+  .footer { text-align: center; padding: 24px 0 0; }
+  .reset-btn {
+    background: none; border: 1px solid var(--border); color: var(--muted);
+    font-family: 'DM Sans', sans-serif; font-size: 12px;
+    padding: 10px 20px; border-radius: 20px; cursor: pointer; transition: all 0.2s;
+  }
+  .reset-btn:hover { color: var(--text); border-color: #555; }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(8px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-glow"></div>
+  <div class="header-top">
+    <div>
+      <div class="greeting">Good <em id="tod">morning</em>,<br>Daniel.</div>
+      <div id="workoutBadge"></div>
+    </div>
+    <div class="date-chip" id="dateChip"></div>
+  </div>
+</div>
+
+<div class="progress-section">
+  <div class="progress-row">
+    <div class="progress-bar-wrap">
+      <div class="progress-label">
+        <span>Progress</span>
+        <span id="progLabel">0 / 0</span>
+      </div>
+      <div class="progress-bar">
+        <div class="progress-fill" id="progFill" style="width:0%"></div>
+      </div>
+    </div>
+    <div class="streak-pill" id="streakPill" style="display:none">
+      🔥 <span id="streakNum">0</span>d
+    </div>
+  </div>
+</div>
+
+<div class="wrap">
+  <div id="doneBanner" class="done-banner">
+    <div class="big">🌟</div>
+    <h3>Routine Complete!</h3>
+    <p>You're set for the day. Go crush it.</p>
+  </div>
+  <div class="habits" id="habitList"></div>
+  <div class="footer">
+    <button class="reset-btn" onclick="resetDay()">↺ Reset Today</button>
+  </div>
+</div>
+
+<script>
+const WORKOUT_SCHEDULE = {
+  0: null,
+  1: { type:'yoga',    label:'🧘 Yoga',                     tag:'yoga'    },
+  2: { type:'run',     label:'🏃 Run',                      tag:'run'     },
+  3: { type:'stretch', label:'🤸 Stretch & Light Movement', tag:'stretch' },
+  4: { type:'run',     label:'🏃 Run',                      tag:'run'     },
+  5: { type:'stretch', label:'🤸 Stretch & Light Movement', tag:'stretch' },
+  6: { type:'run',     label:'🏃 Run',                      tag:'run'     },
+};
+
+const WORKOUT_SUBTASKS = {
+  yoga:    [
+    { id:'yoga_warmup', name:'Warm-up (5 min)',        tag:'yoga'    },
+    { id:'yoga_flow',   name:'Yoga Flow (20–25 min)',  tag:'yoga'    },
+    { id:'yoga_cool',   name:'Cool-down & Breathwork', tag:'yoga'    },
+  ],
+  run:     [
+    { id:'run_warmup',  name:'Warm-up walk (5 min)',   tag:'run'     },
+    { id:'run_main',    name:'Run (20–25 min)',         tag:'run'     },
+    { id:'run_cool',    name:'Cool-down walk (5 min)',  tag:'run'     },
+  ],
+  stretch: [
+    { id:'str_mob',     name:'Mobility work (10 min)',      tag:'stretch' },
+    { id:'str_full',    name:'Full body stretch (10 min)',   tag:'stretch' },
+    { id:'str_breath',  name:'Breathwork / light walk',      tag:'stretch' },
+  ],
+};
+
+const INTENTION_PROMPTS = [
+  { q:"What's your #1 intention for today?",                      hint:"One thing that would make today a success." },
+  { q:"How do you want to show up today?",                         hint:"Energy, mindset, presence — pick a word or phrase." },
+  { q:"What's most important to protect your time for today?",     hint:"What should not get crowded out?" },
+  { q:"What feeling do you want to carry through the day?",        hint:"Calm? Focused? Energized? Why?" },
+  { q:"What's one thing you're committed to completing today?",    hint:"Make it specific and achievable." },
+  { q:"Where do you want to be most intentional today?",           hint:"Work, relationships, health — pick one." },
+  { q:"What does a great version of today look like?",             hint:"Picture it, then name one step to get there." },
+];
+
+const GOAL_PROMPTS = [
+  { q:"What's your biggest goal right now?",                       hint:"Are you moving toward it today? How?" },
+  { q:"Which of your goals needs the most attention this week?",   hint:"What's one action you can take today?" },
+  { q:"What goal have you been avoiding?",                         hint:"Name one small step to re-engage with it." },
+  { q:"How close are you to your most important goal?",            hint:"What's the next milestone? What's blocking you?" },
+  { q:"What habit moves your goals forward most?",                 hint:"Are you doing it consistently?" },
+  { q:"What would future-you thank present-you for doing today?",  hint:"Do that thing." },
+  { q:"Which goal deserves a win today?",                          hint:"Plan one specific action to make progress." },
+];
+
+function getDailyPrompt(arr) {
+  const idx = Math.floor((new Date() - new Date('2026-01-01')) / 86400000) % arr.length;
+  return arr[(idx + arr.length) % arr.length];
+}
+
+const HABITS = [
+  { id:'medication', icon:'💊', name:'Take Medication',             meta:'Triggers the whole routine',  freq:'daily' },
+  { id:'workout',    icon:'🏋️', name:'Workout',                     meta:"See today's session below",   freq:'workout', expandable:true },
+  {
+    id:'hygiene', icon:'🚿', name:'Shower & Hygiene', meta:'Tap to expand', freq:'daily', expandable:true,
+    subtasks:[
+      { id:'shower',     name:'Shower',              freq:'daily',     tag:''    },
+      { id:'teeth',      name:'Brush & Floss Teeth', freq:'daily',     tag:''    },
+      { id:'deodorant',  name:'Deodorant',            freq:'daily',     tag:''    },
+      { id:'moisturize', name:'Moisturize',           freq:'daily',     tag:''    },
+      { id:'shampoo',    name:'Shampoo Hair',         freq:'alternate', tag:'alt' },
+      { id:'shave',      name:'Shave',                freq:'alternate', tag:'alt' },
+      { id:'trim',       name:'Trim/Groom Beard',     freq:'alternate', tag:'alt' },
+    ]
+  },
+  {
+    id:'dress', icon:'👔', name:'Get Dressed', meta:'Tap to expand', freq:'daily', expandable:true,
+    subtasks:[
+      { id:'laundry',  name:'Put Laundry in Washing Machine', freq:'daily', tag:'laundry' },
+      { id:'outfit',   name:'Pick Out Outfit',                freq:'daily', tag:''        },
+      { id:'getdress', name:'Get Dressed',                    freq:'daily', tag:''        },
+    ]
+  },
+  {
+    id:'breakfast', icon:'☕', name:'Breakfast & Coffee', meta:'Tap to expand', freq:'daily', expandable:true,
+    subtasks:[
+      { id:'coffee',    name:'Make Coffee',       freq:'daily', tag:'coffee' },
+      { id:'food',      name:'Prepare Breakfast', freq:'daily', tag:''       },
+      { id:'crossword', name:'Daily Crossword',   freq:'daily', tag:''       },
+    ]
+  },
+  {
+    id:'plan', icon:'📋', name:'Plan My Day & Reflect', meta:'Tap to expand', freq:'daily',
+    expandable:true, isReflect:true,
+  },
+];
+
+const expanded = new Set(['hygiene','workout','breakfast','plan','dress']);
+
+function todayKey() { return new Date().toISOString().slice(0,10); }
+function load()     { try { return JSON.parse(localStorage.getItem('mr5')||'{}'); } catch { return {}; } }
+function save(s)    { localStorage.setItem('mr5', JSON.stringify(s)); }
+function isAltDay() { return Math.floor((new Date()-new Date('2026-01-01'))/86400000)%2===0; }
+function todayWorkout() { return WORKOUT_SCHEDULE[new Date().getDay()]||null; }
+
+function habitStreak(state, id) {
+  let n=0;
+  for(let i=1;i<=365;i++){
+    const d=new Date(); d.setDate(d.getDate()-i);
+    if(state[d.toISOString().slice(0,10)]?.habits?.[id]==='done') n++; else break;
+  }
+  return n;
+}
+
+function globalStreak(state) {
+  let n=0;
+  for(let i=1;i<=365;i++){
+    const d=new Date(); d.setDate(d.getDate()-i);
+    if(state[d.toISOString().slice(0,10)]?.completed) n++; else break;
+  }
+  return n;
+}
+
+function toggle(state, key, type, id) {
+  if(!state[key]) state[key]={habits:{},subtasks:{}};
+  if(!state[key][type]) state[key][type]={};
+  state[key][type][id] = state[key][type][id]==='done' ? null : 'done';
+  save(state); render();
+}
+
+function isHabitActive(h, alt, wod) {
+  if(h.freq==='daily') return true;
+  if(h.freq==='alternate') return alt;
+  if(h.freq==='workout') return wod!==null;
+  return true;
+}
+
+function render() {
+  const state = load();
+  const today = todayKey();
+  const td    = state[today]||{habits:{},subtasks:{}};
+  const alt   = isAltDay();
+  const wod   = todayWorkout();
+
+  const hr = new Date().getHours();
+  document.getElementById('tod').textContent = hr<12?'morning':hr<17?'afternoon':'evening';
+  document.getElementById('dateChip').textContent =
+    new Date().toLocaleDateString('en-CA',{weekday:'short',month:'short',day:'numeric'});
+
+  const badge = document.getElementById('workoutBadge');
+  badge.innerHTML = wod
+    ? `<div class="workout-day-badge ${wod.tag}">${wod.label} day</div>`
+    : `<div class="workout-day-badge rest">😴 Rest day</div>`;
+
+  // Count checkable items
+  let total=0, done=0;
+  HABITS.forEach(h => {
+    const active = isHabitActive(h, alt, wod);
+    if(!active) return;
+    if(h.expandable && h.id==='workout') {
+      (wod?WORKOUT_SUBTASKS[wod.type]:[]).forEach(s => {
+        total++; if(td.subtasks?.[s.id]==='done') done++;
+      });
+    } else if(h.expandable && h.isReflect) {
+      ['reflect_intent','reflect_goal'].forEach(id => {
+        total++; if(td.subtasks?.[id]==='done') done++;
+      });
+    } else if(h.expandable) {
+      h.subtasks.forEach(s => {
+        const sa = s.freq==='daily'||(s.freq==='alternate'&&alt);
+        if(!sa) return;
+        total++; if(td.subtasks?.[s.id]==='done') done++;
+      });
+    } else {
+      total++; if(td.habits?.[h.id]==='done') done++;
+    }
+  });
+
+  document.getElementById('progFill').style.width=(total?(done/total)*100:0)+'%';
+  document.getElementById('progLabel').textContent=done+' / '+total;
+
+  const gs=globalStreak(state);
+  const sp=document.getElementById('streakPill');
+  sp.style.display=gs>0?'flex':'none';
+  document.getElementById('streakNum').textContent=gs;
+
+  const allDone=total>0&&done===total;
+  document.getElementById('doneBanner').classList.toggle('show',allDone);
+  if(allDone){ state[today]={...td,completed:true}; save(state); }
+
+  const list=document.getElementById('habitList');
+  list.innerHTML='';
+
+  HABITS.forEach(h => {
+    const active=isHabitActive(h,alt,wod);
+    const card=document.createElement('div');
+    card.className='habit-card'+(!active?' inactive':'');
+
+    let isDone=false;
+    if(h.expandable && h.id==='workout'){
+      const subs=wod?WORKOUT_SUBTASKS[wod.type]:[];
+      isDone=subs.length>0&&subs.every(s=>td.subtasks?.[s.id]==='done');
+    } else if(h.expandable && h.isReflect){
+      isDone=td.subtasks?.reflect_intent==='done'&&td.subtasks?.reflect_goal==='done';
+    } else if(h.expandable){
+      const activeSubs=h.subtasks.filter(s=>s.freq==='daily'||(s.freq==='alternate'&&alt));
+      isDone=activeSubs.length>0&&activeSubs.every(s=>td.subtasks?.[s.id]==='done');
+    } else {
+      isDone=td.habits?.[h.id]==='done';
+    }
+    if(isDone) card.classList.add('completed');
+
+    const hs=habitStreak(state,h.id);
+    const isExp=expanded.has(h.id);
+    const isWod=h.id==='workout';
+    let metaText=active?h.meta:'Rest day';
+    if(isWod&&active&&wod) metaText=wod.label;
+
+    const main=document.createElement('div');
+    main.className='habit-main';
+    main.innerHTML=`
+      <div class="habit-icon">${h.icon}</div>
+      <div class="habit-body">
+        <div class="habit-name">${h.name}</div>
+        <div class="habit-sub">${metaText}</div>
+        ${hs>1?`<div class="habit-streak">🔥 ${hs} day streak</div>`:''}
+      </div>
+      ${!active?'<div class="rest-tag">Rest</div>':''}
+      ${isWod&&active&&wod?`<div class="workout-type-chip ${wod.tag}">${wod.type}</div>`:''}
+      ${h.expandable&&active?`<button class="expand-toggle"><span class="expand-arrow${isExp?' open':''}">▼</span></button>`:''}
+      ${!h.expandable&&active?`<div class="check-circle">${isDone?'✓':''}</div>`:''}
+    `;
+    card.appendChild(main);
+
+    if(h.expandable&&active){
+      const panel=document.createElement('div');
+      panel.className='subtasks'+(isExp?' open':'');
+      const inner=document.createElement('div');
+      inner.className='subtask-inner';
+
+      if(isWod&&wod){
+        const lbl=document.createElement('div');
+        lbl.className='sub-group-label';
+        lbl.textContent=wod.label.slice(2).trim()+" — Today's Session";
+        inner.appendChild(lbl);
+        WORKOUT_SUBTASKS[wod.type].forEach(s=>inner.appendChild(makeSubRow(s,td,true,today,s.tag)));
+
+      } else if(h.isReflect){
+        const intentPrompt=getDailyPrompt(INTENTION_PROMPTS);
+        const goalPrompt=getDailyPrompt(GOAL_PROMPTS);
+
+        const lbl1=document.createElement('div');
+        lbl1.className='sub-group-label'; lbl1.textContent='Intentions for the Day';
+        inner.appendChild(lbl1);
+        const ib=document.createElement('div');
+        ib.className='reflection-prompt';
+        ib.innerHTML=`<div class="prompt-q">${intentPrompt.q}</div><div class="prompt-hint">${intentPrompt.hint}</div>`;
+        inner.appendChild(ib);
+        inner.appendChild(makeCheckRow('reflect_intent','Intentions set ✓',td,today,'reflect'));
+
+        const lbl2=document.createElement('div');
+        lbl2.className='sub-group-label'; lbl2.textContent='Goal Check-in';
+        inner.appendChild(lbl2);
+        const gb=document.createElement('div');
+        gb.className='reflection-prompt';
+        gb.innerHTML=`<div class="prompt-q">${goalPrompt.q}</div><div class="prompt-hint">${goalPrompt.hint}</div>`;
+        inner.appendChild(gb);
+        inner.appendChild(makeCheckRow('reflect_goal','Goal reviewed ✓',td,today,'reflect'));
+
+        // App links group
+        const linksGroup=document.createElement('div');
+        linksGroup.className='app-links-group';
+
+        // Apple Calendar
+        const calLink=document.createElement('a');
+        calLink.href='calshow://';
+        calLink.className='app-link-row';
+        calLink.innerHTML=`
+          <div class="app-link-icon">📅</div>
+          <div class="app-link-label cal">Open Apple Calendar</div>
+          <div class="app-link-arrow">↗</div>
+        `;
+        linksGroup.appendChild(calLink);
+
+        // Reminders — Personal list
+        // x-apple-reminder:// deep links to the Reminders app; list name passed as query
+        const remLink=document.createElement('a');
+        remLink.href='x-apple-reminder://';
+        remLink.className='app-link-row';
+        remLink.innerHTML=`
+          <div class="app-link-icon">🔔</div>
+          <div class="app-link-label reminders">Open Reminders — Personal</div>
+          <div class="app-link-arrow">↗</div>
+        `;
+        linksGroup.appendChild(remLink);
+
+        // Today view — opens Spotlight / Today widgets
+        const todayLink=document.createElement('a');
+        todayLink.href='shortcuts://open-shortcut?name=Today';
+        todayLink.className='app-link-row';
+        todayLink.innerHTML=`
+          <div class="app-link-icon">📲</div>
+          <div class="app-link-label today">Open Today View</div>
+          <div class="app-link-arrow">↗</div>
+        `;
+        linksGroup.appendChild(todayLink);
+
+        inner.appendChild(linksGroup);
+
+      } else {
+        const daily=h.subtasks.filter(s=>s.freq==='daily');
+        const altSubs=h.subtasks.filter(s=>s.freq==='alternate');
+        if(daily.length){
+          const lbl=document.createElement('div');
+          lbl.className='sub-group-label'; lbl.textContent='Every Day';
+          inner.appendChild(lbl);
+          daily.forEach(s=>inner.appendChild(makeSubRow(s,td,true,today,s.tag)));
+        }
+        if(altSubs.length){
+          const lbl=document.createElement('div');
+          lbl.className='sub-group-label';
+          lbl.textContent=alt?'Every Other Day — Active Today':'Every Other Day — Rest Today';
+          inner.appendChild(lbl);
+          altSubs.forEach(s=>inner.appendChild(makeSubRow(s,td,alt,today,s.tag)));
+        }
+      }
+
+      panel.appendChild(inner);
+      card.appendChild(panel);
+
+      const expBtn=main.querySelector('.expand-toggle');
+      const toggleExp=()=>{ expanded.has(h.id)?expanded.delete(h.id):expanded.add(h.id); render(); };
+      expBtn&&expBtn.addEventListener('click',e=>{ e.stopPropagation(); toggleExp(); });
+      main.addEventListener('click',e=>{ if(e.target.closest('.expand-toggle')) return; toggleExp(); });
+    }
+
+    if(!h.expandable&&active){
+      main.addEventListener('click',()=>{ const s=load(); toggle(s,today,'habits',h.id); });
+    }
+
+    list.appendChild(card);
+  });
+}
+
+function makeSubRow(s, td, active, today, tagClass) {
+  const done=td.subtasks?.[s.id]==='done';
+  const row=document.createElement('div');
+  row.className='subtask-row'+(done?' done':'')+(!active?' rest-sub':'');
+  const tagLabel=s.freq==='alternate'?'Alt. day'
+    :tagClass==='yoga'?'Yoga':tagClass==='run'?'Run'
+    :tagClass==='stretch'?'Stretch':tagClass==='coffee'?'Daily'
+    :tagClass==='laundry'?'Daily':'Daily';
+  row.innerHTML=`
+    <div class="sub-check">${done?'✓':''}</div>
+    <div class="sub-name">${s.name}</div>
+    <div class="sub-tag ${tagClass||''}">${tagLabel}</div>
+  `;
+  if(active) row.addEventListener('click',()=>{ const st=load(); toggle(st,today,'subtasks',s.id); });
+  return row;
+}
+
+function makeCheckRow(id, label, td, today, tagClass) {
+  const done=td.subtasks?.[id]==='done';
+  const row=document.createElement('div');
+  row.className='subtask-row'+(done?' done':'');
+  row.style.marginTop='4px';
+  row.innerHTML=`
+    <div class="sub-check">${done?'✓':''}</div>
+    <div class="sub-name">${label}</div>
+    <div class="sub-tag ${tagClass}">Reflect</div>
+  `;
+  row.addEventListener('click',()=>{ const st=load(); toggle(st,today,'subtasks',id); });
+  return row;
+}
+
+function resetDay(){
+  const s=load(); s[todayKey()]={habits:{},subtasks:{}}; save(s); render();
+}
+
+render();
+</script>
+</body>
+</html>

@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="My Routines">
+<title>My Routines</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --text: #f0f0f8;
+    --muted: #9090b0;
+    --border: #ffffff18;
+    --surface: #ffffff0c;
+    --surface2: #ffffff18;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 32px 20px 48px;
+    position: relative;
+    overflow: hidden;
+    background: #080810;
+  }
+
+  /* Dynamic background — shifts based on time of day */
+  .bg {
+    position: fixed; inset: 0; z-index: 0;
+    transition: background 2s ease;
+  }
+
+  .bg.morning {
+    background:
+      radial-gradient(ellipse at 30% 0%, #ff9a4420 0%, transparent 60%),
+      radial-gradient(ellipse at 70% 20%, #ffd08020 0%, transparent 50%),
+      radial-gradient(ellipse at 50% 100%, #7c6af710 0%, transparent 60%),
+      linear-gradient(160deg, #0f0a18 0%, #1a0f0a 50%, #0f0a18 100%);
+  }
+
+  .bg.afternoon {
+    background:
+      radial-gradient(ellipse at 60% 0%, #38bdf820 0%, transparent 60%),
+      radial-gradient(ellipse at 20% 30%, #7c6af718 0%, transparent 50%),
+      linear-gradient(160deg, #080c18 0%, #080f18 100%);
+  }
+
+  .bg.evening {
+    background:
+      radial-gradient(ellipse at 40% 0%, #9b87f520 0%, transparent 60%),
+      radial-gradient(ellipse at 80% 10%, #c084fc15 0%, transparent 50%),
+      radial-gradient(ellipse at 20% 80%, #1a0a2e30 0%, transparent 50%),
+      linear-gradient(160deg, #08080f 0%, #0c0818 100%);
+  }
+
+  /* Stars (evening/night) */
+  .stars {
+    position: fixed; inset: 0; pointer-events: none; z-index: 0;
+    opacity: 0; transition: opacity 1.5s ease;
+  }
+  .stars.visible { opacity: 1; }
+  .star {
+    position: absolute; border-radius: 50%; background: #fff;
+    animation: twinkle 3s infinite alternate;
+  }
+  @keyframes twinkle { from { opacity: 0.05; } to { opacity: 0.5; } }
+
+  /* Content */
+  .content { position: relative; z-index: 1; width: 100%; max-width: 400px; }
+
+  /* Header */
+  .header { text-align: center; margin-bottom: 40px; }
+
+  .time-display {
+    font-size: 56px;
+    font-weight: 300;
+    letter-spacing: -2px;
+    line-height: 1;
+    margin-bottom: 6px;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .date-display {
+    font-size: 14px;
+    color: var(--muted);
+    letter-spacing: 0.5px;
+  }
+
+  .greeting-line {
+    font-family: 'DM Serif Display', serif;
+    font-size: 22px;
+    margin-top: 16px;
+    line-height: 1.3;
+  }
+
+  .greeting-line em { font-style: italic; }
+
+  /* Active routine indicator */
+  .active-hint {
+    font-size: 11px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-top: 6px;
+  }
+
+  /* Routine cards */
+  .routines { display: flex; flex-direction: column; gap: 14px; margin-bottom: 32px; }
+
+  .routine-card {
+    border-radius: 22px;
+    padding: 22px 24px;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    border: 1px solid var(--border);
+    position: relative;
+    overflow: hidden;
+    transition: transform 0.15s, opacity 0.15s;
+    cursor: pointer;
+  }
+
+  .routine-card:active { transform: scale(0.97); opacity: 0.85; }
+
+  .routine-card.morning-card {
+    background: linear-gradient(135deg, #1a120a 0%, #12100a 100%);
+    border-color: #ff9a4430;
+  }
+
+  .routine-card.evening-card {
+    background: linear-gradient(135deg, #10101a 0%, #0c0818 100%);
+    border-color: #9b87f530;
+  }
+
+  /* Glow effect */
+  .routine-card::before {
+    content: '';
+    position: absolute;
+    top: -40px; left: -40px;
+    width: 150px; height: 150px;
+    border-radius: 50%;
+    opacity: 0.12;
+    pointer-events: none;
+  }
+
+  .morning-card::before { background: #ff9a44; }
+  .evening-card::before { background: #9b87f5; }
+
+  .card-icon {
+    font-size: 38px;
+    flex-shrink: 0;
+    filter: drop-shadow(0 0 12px currentColor);
+  }
+
+  .morning-card .card-icon { color: #ff9a44; }
+  .evening-card .card-icon { color: #9b87f5; }
+
+  .card-body { flex: 1; }
+
+  .card-label {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--muted);
+    margin-bottom: 3px;
+  }
+
+  .card-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: 22px;
+    line-height: 1.1;
+  }
+
+  .morning-card .card-title { color: #ffe0c0; }
+  .evening-card .card-title { color: #e0d4ff; }
+
+  .card-meta {
+    font-size: 12px;
+    color: var(--muted);
+    margin-top: 4px;
+  }
+
+  /* Progress rings on cards */
+  .card-progress {
+    flex-shrink: 0;
+    position: relative;
+    width: 44px; height: 44px;
+  }
+
+  .card-progress svg { transform: rotate(-90deg); }
+
+  .card-progress-label {
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--muted);
+    text-align: center;
+    line-height: 1;
+  }
+
+  .active-pill {
+    position: absolute;
+    top: 14px; right: 14px;
+    font-size: 10px;
+    font-weight: 600;
+    padding: 3px 8px;
+    border-radius: 20px;
+    animation: pulse 2s infinite;
+  }
+
+  .morning-card .active-pill { background: #ff9a4422; color: #ff9a44; border: 1px solid #ff9a4444; }
+  .evening-card .active-pill { background: #9b87f522; color: #9b87f5; border: 1px solid #9b87f544; }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+  }
+
+  /* Quick links */
+  .quick-links {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 10px;
+  }
+
+  .quick-link {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 14px 10px;
+    text-align: center;
+    text-decoration: none;
+    transition: background 0.15s, transform 0.1s;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+  }
+
+  .quick-link:active { transform: scale(0.95); background: var(--surface2); }
+
+  .ql-icon { font-size: 22px; }
+  .ql-label { font-size: 11px; color: var(--muted); line-height: 1.2; }
+
+  /* Footer */
+  .footer {
+    text-align: center;
+    margin-top: 32px;
+    font-size: 11px;
+    color: var(--muted);
+    opacity: 0.5;
+  }
+</style>
+</head>
+<body>
+
+<div class="bg" id="bgEl"></div>
+<div class="stars" id="starsEl"></div>
+
+<div class="content">
+  <div class="header">
+    <div class="time-display" id="timeDis">6:00</div>
+    <div class="date-display" id="dateDis"></div>
+    <div class="greeting-line" id="greetLine"></div>
+    <div class="active-hint" id="activeHint"></div>
+  </div>
+
+  <div class="routines">
+    <!-- Morning Card -->
+    <div class="routine-card morning-card" id="morningCard" onclick="openRoutine('morning')">
+      <div class="card-icon">☀️</div>
+      <div class="card-body">
+        <div class="card-label">Starts at 6:00 AM</div>
+        <div class="card-title">Morning<br>Routine</div>
+        <div class="card-meta" id="morningMeta">Tap to begin</div>
+      </div>
+      <div class="card-progress" id="morningProgress">
+        <svg width="44" height="44" viewBox="0 0 44 44">
+          <circle cx="22" cy="22" r="18" fill="none" stroke="#ffffff10" stroke-width="3"/>
+          <circle cx="22" cy="22" r="18" fill="none" stroke="#ff9a44" stroke-width="3"
+            stroke-linecap="round" stroke-dasharray="113"
+            stroke-dashoffset="113" id="morningRing"/>
+        </svg>
+        <div class="card-progress-label" id="morningPct">0%</div>
+      </div>
+    </div>
+
+    <!-- Evening Card -->
+    <div class="routine-card evening-card" id="eveningCard" onclick="openRoutine('evening')">
+      <div class="card-icon">🌙</div>
+      <div class="card-body">
+        <div class="card-label">Starts at 8:00 PM</div>
+        <div class="card-title">Evening<br>Routine</div>
+        <div class="card-meta" id="eveningMeta">Tap to begin</div>
+      </div>
+      <div class="card-progress" id="eveningProgress">
+        <svg width="44" height="44" viewBox="0 0 44 44">
+          <circle cx="22" cy="22" r="18" fill="none" stroke="#ffffff10" stroke-width="3"/>
+          <circle cx="22" cy="22" r="18" fill="none" stroke="#9b87f5" stroke-width="3"
+            stroke-linecap="round" stroke-dasharray="113"
+            stroke-dashoffset="113" id="eveningRing"/>
+        </svg>
+        <div class="card-progress-label" id="eveningPct">0%</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Quick links -->
+  <div class="quick-links">
+    <a class="quick-link" href="calshow://">
+      <div class="ql-icon">📅</div>
+      <div class="ql-label">Apple Calendar</div>
+    </a>
+    <a class="quick-link" href="x-apple-reminderkit://">
+      <div class="ql-icon">🔔</div>
+      <div class="ql-label">Reminders</div>
+    </a>
+    <a class="quick-link" href="x-apple-reminderkit://today">
+      <div class="ql-icon">⭐</div>
+      <div class="ql-label">Today's Tasks</div>
+    </a>
+  </div>
+
+  <div class="footer">Daniel's Daily Routines · Saved to Home Screen</div>
+</div>
+
+<script>
+// ── Embedded routine data (mirrors mr5 and er1 localStorage keys) ─────────────
+// We read progress directly from the same localStorage the trackers use.
+
+function todayKey() { return new Date().toISOString().slice(0,10); }
+
+function getProgress(storageKey, countFn) {
+  try {
+    const state = JSON.parse(localStorage.getItem(storageKey) || '{}');
+    const td = state[todayKey()] || { habits:{}, subtasks:{} };
+    return countFn(td);
+  } catch { return { done:0, total:0 }; }
+}
+
+// Morning routine items (mirrors HABITS in morning tracker)
+function morningCount(td) {
+  const isAltDay = Math.floor((new Date()-new Date('2026-01-01'))/86400000)%2===0;
+  const wod = [null,true,true,true,true,true,true][new Date().getDay()]; // workout every day except Sunday
+
+  let total=0, done=0;
+
+  // medication
+  total++; if(td.habits?.medication==='done') done++;
+
+  // workout subtasks (3 per session, Sunday=rest)
+  if(new Date().getDay()!==0){
+    total+=3;
+    ['yoga_warmup','yoga_flow','yoga_cool','run_warmup','run_main','run_cool','str_mob','str_full','str_breath'].slice(0,3).forEach(id=>{
+      if(td.subtasks?.[id]==='done') done++;
+    });
+  }
+
+  // hygiene (4 daily + up to 3 alt)
+  ['shower','teeth','deodorant','moisturize'].forEach(id=>{ total++; if(td.subtasks?.[id]==='done') done++; });
+  if(isAltDay){
+    ['shampoo','shave','trim'].forEach(id=>{ total++; if(td.subtasks?.[id]==='done') done++; });
+  }
+
+  // dress subtasks
+  ['laundry','outfit','dressed'].forEach(id=>{ total++; if(td.subtasks?.[id]==='done') done++; });
+
+  // breakfast subtasks
+  ['coffee','food','crossword'].forEach(id=>{ total++; if(td.subtasks?.[id]==='done') done++; });
+
+  // reflection
+  ['reflect_intent','reflect_goal'].forEach(id=>{ total++; if(td.subtasks?.[id]==='done') done++; });
+
+  return { done, total };
+}
+
+// Evening routine items
+function eveningCount(td) {
+  let total=0, done=0;
+
+  // prep subtasks
+  ['laundry_dry','outfit_tmrw','pack_bag','lunch_tmrw','coffee_set'].forEach(id=>{
+    total++; if(td.subtasks?.[id]==='done') done++;
+  });
+
+  // skincare
+  ['skin_wash','skin_tone','skin_moist','skin_teeth','skin_floss'].forEach(id=>{
+    total++; if(td.subtasks?.[id]==='done') done++;
+  });
+
+  // screens
+  total++; if(td.habits?.screens==='done') done++;
+
+  // reflection
+  ['reflect_eve','reflect_tmrw'].forEach(id=>{ total++; if(td.subtasks?.[id]==='done') done++; });
+
+  return { done, total };
+}
+
+// ── Routing ───────────────────────────────────────────────────────────────────
+// Both trackers are expected to be in the same folder / deployed together.
+// If opening from filesystem, they'll be siblings. If hosted, same directory.
+function openRoutine(which) {
+  // Try to open sibling files
+  const base = window.location.href.replace(/[^/]*$/, '');
+  if(which==='morning'){
+    window.location.href = base + 'morning-routine.html';
+  } else {
+    window.location.href = base + 'evening-routine.html';
+  }
+}
+
+// ── Clock & UI ────────────────────────────────────────────────────────────────
+function update() {
+  const now  = new Date();
+  const hr   = now.getHours();
+  const min  = now.getMinutes().toString().padStart(2,'0');
+  const h12  = hr%12||12;
+  const ampm = hr<12?'AM':'PM';
+
+  document.getElementById('timeDis').textContent = `${h12}:${min} ${ampm}`;
+  document.getElementById('dateDis').textContent =
+    now.toLocaleDateString('en-CA',{weekday:'long',month:'long',day:'numeric',year:'numeric'});
+
+  // Greeting & background
+  const bg = document.getElementById('bgEl');
+  const stars = document.getElementById('starsEl');
+  let greet, hint, bgClass;
+
+  if(hr>=5 && hr<12){
+    greet = 'Good <em>morning</em>, Daniel.';
+    hint  = '☀️ Morning routine is active';
+    bgClass = 'morning';
+    stars.classList.remove('visible');
+  } else if(hr>=12 && hr<17){
+    greet = 'Good <em>afternoon</em>, Daniel.';
+    hint  = '🌤 Morning done · Evening starts at 8 PM';
+    bgClass = 'afternoon';
+    stars.classList.remove('visible');
+  } else if(hr>=17 && hr<20){
+    greet = 'Good <em>evening</em>, Daniel.';
+    hint  = '🌅 Evening routine starts at 8:00 PM';
+    bgClass = 'evening';
+    stars.classList.add('visible');
+  } else {
+    greet = 'Wind down, Daniel.';
+    hint  = '🌙 Evening routine is active';
+    bgClass = 'evening';
+    stars.classList.add('visible');
+  }
+
+  bg.className = 'bg ' + bgClass;
+  document.getElementById('greetLine').innerHTML = greet;
+  document.getElementById('activeHint').textContent = hint;
+
+  // Show active pill on the relevant card
+  document.querySelectorAll('.active-pill').forEach(el => el.remove());
+  if((hr>=5&&hr<12)){
+    const pill=document.createElement('div');
+    pill.className='active-pill'; pill.textContent='● Active now';
+    document.getElementById('morningCard').appendChild(pill);
+  } else if(hr>=20||hr<5){
+    const pill=document.createElement('div');
+    pill.className='active-pill'; pill.textContent='● Active now';
+    document.getElementById('eveningCard').appendChild(pill);
+  }
+
+  // Progress rings
+  const mp = morningCount(JSON.parse(localStorage.getItem('mr5')||'{}')[todayKey()]||{habits:{},subtasks:{}});
+  const ep = eveningCount(JSON.parse(localStorage.getItem('er1')||'{}')[todayKey()]||{habits:{},subtasks:{}});
+
+  updateRing('morningRing','morningPct','morningMeta', mp);
+  updateRing('eveningRing','eveningPct','eveningMeta', ep);
+}
+
+function updateRing(ringId, pctId, metaId, {done,total}) {
+  const pct = total ? Math.round((done/total)*100) : 0;
+  const circumference = 113;
+  document.getElementById(ringId).style.strokeDashoffset = circumference - (circumference*(pct/100));
+  document.getElementById(pctId).textContent = pct+'%';
+  document.getElementById(metaId).textContent =
+    pct===100 ? '✓ Complete!' :
+    done===0  ? 'Not started yet' :
+    `${done} of ${total} done`;
+}
+
+// ── Stars ─────────────────────────────────────────────────────────────────────
+function makeStars(){
+  const c=document.getElementById('starsEl');
+  for(let i=0;i<50;i++){
+    const s=document.createElement('div'); s.className='star';
+    const sz=Math.random()*2+0.5;
+    s.style.cssText=`width:${sz}px;height:${sz}px;top:${Math.random()*100}%;left:${Math.random()*100}%;animation-delay:${Math.random()*4}s;animation-duration:${2+Math.random()*3}s`;
+    c.appendChild(s);
+  }
+}
+
+makeStars();
+update();
+setInterval(update, 10000); // refresh every 10s
+</script>
+</body>
+</html>

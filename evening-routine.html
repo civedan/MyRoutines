@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Evening Routine</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #080810;
+    --surface: #10101a;
+    --surface2: #18182a;
+    --border: #252538;
+    --accent: #9b87f5;
+    --accent2: #c084fc;
+    --accent3: #f59e0b;
+    --accent4: #38bdf8;
+    --accent5: #f472b6;
+    --moon: #e2d4ff;
+    --text: #e0e0f0;
+    --muted: #5a5a78;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    padding: 0 0 60px;
+    background-image:
+      radial-gradient(ellipse at 20% 0%, #1a0a2e44 0%, transparent 60%),
+      radial-gradient(ellipse at 80% 10%, #0a0a2044 0%, transparent 50%);
+  }
+
+  .wrap { max-width: 480px; margin: 0 auto; padding: 0 16px; }
+
+  /* Stars decoration */
+  .stars {
+    position: fixed; top: 0; left: 0; right: 0; height: 200px;
+    pointer-events: none; overflow: hidden; z-index: 0;
+  }
+  .star {
+    position: absolute; border-radius: 50%;
+    background: #fff; animation: twinkle 3s infinite alternate;
+  }
+  @keyframes twinkle { from { opacity: 0.1; } to { opacity: 0.6; } }
+
+  /* Header */
+  .header { padding: 36px 16px 20px; max-width: 480px; margin: 0 auto; position: relative; z-index: 1; }
+  .header-glow {
+    position: absolute; top: -40px; left: 50%; transform: translateX(-50%);
+    width: 320px; height: 200px;
+    background: radial-gradient(ellipse, #9b87f514 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .header-top { display: flex; justify-content: space-between; align-items: flex-start; }
+  .greeting { font-family: 'DM Serif Display', serif; font-size: 28px; line-height: 1.15; }
+  .greeting em { font-style: italic; color: var(--accent2); }
+  .date-chip {
+    font-size: 11px; color: var(--muted);
+    background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 20px; padding: 5px 10px; margin-top: 4px; white-space: nowrap;
+  }
+  .tomorrow-badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    margin-top: 10px; font-size: 12px; font-weight: 600;
+    padding: 5px 12px; border-radius: 20px; border: 1px solid;
+    color: var(--accent); border-color: #9b87f544; background: #9b87f511;
+  }
+
+  /* Progress */
+  .progress-section { padding: 0 16px 20px; max-width: 480px; margin: 0 auto; position: relative; z-index: 1; }
+  .progress-row { display: flex; align-items: center; gap: 14px; }
+  .progress-bar-wrap { flex: 1; }
+  .progress-label {
+    display: flex; justify-content: space-between;
+    font-size: 11px; color: var(--muted); margin-bottom: 6px;
+    text-transform: uppercase; letter-spacing: 0.5px;
+  }
+  .progress-bar { height: 5px; background: var(--surface2); border-radius: 10px; overflow: hidden; }
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+    border-radius: 10px;
+    transition: width 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  .streak-pill {
+    display: flex; align-items: center; gap: 4px;
+    background: var(--surface2); border: 1px solid #9b87f533;
+    border-radius: 20px; padding: 5px 11px;
+    font-size: 12px; font-weight: 600; color: var(--accent); white-space: nowrap;
+  }
+
+  /* Cards */
+  .habits { display: flex; flex-direction: column; gap: 8px; position: relative; z-index: 1; }
+  .habit-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 16px; overflow: hidden; transition: border-color 0.25s;
+  }
+  .habit-card.completed { border-color: #c084fc44; }
+
+  .habit-main {
+    display: flex; align-items: center; gap: 12px;
+    padding: 14px 16px; cursor: pointer; user-select: none;
+  }
+  .habit-icon { font-size: 22px; min-width: 30px; text-align: center; }
+  .habit-body { flex: 1; min-width: 0; }
+  .habit-name { font-size: 14px; font-weight: 600; }
+  .habit-card.completed .habit-name { color: var(--muted); text-decoration: line-through; }
+  .habit-sub  { font-size: 11px; color: var(--muted); margin-top: 2px; }
+  .habit-streak { font-size: 10px; color: var(--accent); font-weight: 600; margin-top: 2px; }
+
+  .check-circle {
+    width: 26px; height: 26px; border-radius: 50%;
+    border: 2px solid var(--border);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; flex-shrink: 0; transition: all 0.2s; color: transparent;
+  }
+  .habit-card.completed .check-circle { background: var(--accent2); border-color: var(--accent2); color: #000; }
+
+  .expand-toggle {
+    background: none; border: none; color: var(--muted);
+    font-size: 10px; padding: 4px 6px; cursor: pointer;
+    display: flex; align-items: center; border-radius: 8px;
+    transition: color 0.2s, background 0.2s;
+  }
+  .expand-toggle:hover { color: var(--text); background: var(--surface2); }
+  .expand-arrow { display: inline-block; transition: transform 0.25s; }
+  .expand-arrow.open { transform: rotate(180deg); }
+
+  /* Subtasks */
+  .subtasks { max-height: 0; overflow: hidden; transition: max-height 0.4s cubic-bezier(0.4,0,0.2,1); }
+  .subtasks.open { max-height: 900px; }
+  .subtask-inner { border-top: 1px solid var(--border); padding: 8px 12px 14px; }
+  .sub-group-label {
+    font-size: 10px; text-transform: uppercase; letter-spacing: 0.8px;
+    color: var(--muted); padding: 8px 6px 4px;
+  }
+  .subtask-row {
+    display: flex; align-items: center; gap: 10px;
+    padding: 9px 10px; border-radius: 10px;
+    cursor: pointer; user-select: none; transition: background 0.15s;
+  }
+  .subtask-row:active { background: var(--surface2); }
+  .sub-check {
+    width: 20px; height: 20px; border-radius: 6px;
+    border: 1.5px solid var(--border);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 10px; flex-shrink: 0; transition: all 0.15s; color: transparent;
+  }
+  .subtask-row.done .sub-check { background: var(--accent2); border-color: var(--accent2); color: #000; }
+  .sub-name { font-size: 13px; flex: 1; }
+  .subtask-row.done .sub-name { color: var(--muted); text-decoration: line-through; }
+  .sub-tag {
+    font-size: 10px; padding: 2px 7px; border-radius: 10px;
+    background: var(--surface2); color: var(--muted); white-space: nowrap;
+  }
+  .sub-tag.prep    { color: var(--accent4); background: #38bdf814; }
+  .sub-tag.skin    { color: var(--accent5); background: #f472b614; }
+  .sub-tag.reflect { color: var(--accent2); background: #c084fc14; }
+  .sub-tag.tomorrow { color: var(--accent3); background: #f59e0b14; }
+
+  /* Reflection prompts */
+  .reflection-prompt {
+    background: var(--surface2); border-radius: 10px;
+    padding: 10px 12px; margin: 4px 0;
+  }
+  .prompt-q { font-size: 11px; font-weight: 600; color: var(--accent2); margin-bottom: 4px; }
+  .prompt-hint { font-size: 11px; color: var(--muted); line-height: 1.5; }
+
+  /* Quick links */
+  .quick-links { border-top: 1px solid var(--border); margin-top: 6px; padding-top: 4px; }
+  .quick-link-row {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 10px; border-radius: 10px;
+    cursor: pointer; text-decoration: none; transition: background 0.15s;
+  }
+  .quick-link-row:hover { background: var(--surface2); }
+  .ql-icon { font-size: 18px; min-width: 26px; text-align: center; }
+  .ql-label { font-size: 13px; font-weight: 500; flex: 1; }
+  .ql-arrow { font-size: 11px; color: var(--muted); }
+  .ql-cal    .ql-label { color: var(--accent4); }
+  .ql-remind .ql-label { color: #ff6b6b; }
+
+  /* Done banner */
+  .done-banner {
+    background: linear-gradient(135deg, #9b87f512, #c084fc12);
+    border: 1px solid #9b87f530; border-radius: 16px;
+    padding: 20px; text-align: center; margin-bottom: 16px;
+    display: none; animation: fadeUp 0.4s ease; position: relative; z-index: 1;
+  }
+  .done-banner.show { display: block; }
+  .done-banner .big { font-size: 30px; margin-bottom: 8px; }
+  .done-banner h3 { font-family: 'DM Serif Display', serif; font-size: 20px; }
+  .done-banner p  { font-size: 12px; color: var(--muted); margin-top: 4px; }
+
+  .footer { text-align: center; padding: 24px 0 0; position: relative; z-index: 1; }
+  .reset-btn {
+    background: none; border: 1px solid var(--border); color: var(--muted);
+    font-family: 'DM Sans', sans-serif; font-size: 12px; padding: 10px 20px;
+    border-radius: 20px; cursor: pointer; transition: all 0.2s;
+  }
+  .reset-btn:hover { color: var(--text); border-color: #555; }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(8px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+</style>
+</head>
+<body>
+
+<!-- Decorative stars -->
+<div class="stars" id="stars"></div>
+
+<div class="header">
+  <div class="header-glow"></div>
+  <div class="header-top">
+    <div>
+      <div class="greeting">Good <em>evening</em>,<br>Daniel.</div>
+      <div class="tomorrow-badge" id="tomorrowBadge">🌅 Prepping for tomorrow</div>
+    </div>
+    <div class="date-chip" id="dateChip"></div>
+  </div>
+</div>
+
+<div class="progress-section">
+  <div class="progress-row">
+    <div class="progress-bar-wrap">
+      <div class="progress-label">
+        <span>Evening Progress</span>
+        <span id="progLabel">0 / 0</span>
+      </div>
+      <div class="progress-bar">
+        <div class="progress-fill" id="progFill" style="width:0%"></div>
+      </div>
+    </div>
+    <div class="streak-pill" id="streakPill" style="display:none">
+      🌙 <span id="streakNum">0</span>d
+    </div>
+  </div>
+</div>
+
+<div class="wrap">
+  <div id="doneBanner" class="done-banner">
+    <div class="big">🌙</div>
+    <h3>Evening Complete!</h3>
+    <p>You're all set for tomorrow. Sleep well.</p>
+  </div>
+  <div class="habits" id="habitList"></div>
+  <div class="footer">
+    <button class="reset-btn" onclick="resetDay()">↺ Reset Tonight</button>
+  </div>
+</div>
+
+<script>
+// ── Evening reflection prompts ────────────────────────────────────────────────
+const EVENING_PROMPTS = [
+  { q:"What went well today?",                      hint:"Name one win, big or small." },
+  { q:"What would you do differently today?",        hint:"One lesson learned — no judgment." },
+  { q:"Did you live by your intentions today?",      hint:"Where did you show up? Where can you improve?" },
+  { q:"What are you grateful for today?",            hint:"Name three things, however small." },
+  { q:"What drained your energy today?",             hint:"How can you protect against that tomorrow?" },
+  { q:"What did you accomplish today?",              hint:"Give yourself credit — list it out." },
+  { q:"How did you feel today overall?",             hint:"Emotionally, physically, mentally — any patterns?" },
+];
+
+const TOMORROW_PROMPTS = [
+  { q:"What's the most important thing to do tomorrow?", hint:"One thing that would make it a success." },
+  { q:"What do you need to be ready for tomorrow?",      hint:"Anything to prepare, bring, or remember?" },
+  { q:"How do you want to feel tomorrow morning?",       hint:"Set that intention now." },
+  { q:"What's one thing you're looking forward to tomorrow?", hint:"Even something small counts." },
+  { q:"Is there anything unfinished today to carry forward?", hint:"Add it to your list or let it go." },
+  { q:"What energy do you want to bring to tomorrow?",    hint:"Calm? Bold? Patient? Focused?" },
+  { q:"What would make tomorrow even better than today?", hint:"One small shift or intention." },
+];
+
+function getDailyPrompt(arr) {
+  const idx = Math.floor((new Date() - new Date('2026-01-01')) / 86400000) % arr.length;
+  return arr[(idx + arr.length) % arr.length];
+}
+
+// Tomorrow's day name for badge
+function tomorrowName() {
+  const days = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+  const d = new Date(); d.setDate(d.getDate() + 1);
+  return days[d.getDay()];
+}
+
+// ── Habits ────────────────────────────────────────────────────────────────────
+const HABITS = [
+  // ── PREP FOR TOMORROW ──────────────────────────────────────────────────────
+  {
+    id: 'prep',
+    icon: '🎒',
+    name: 'Prep for Tomorrow',
+    meta: 'Tap to expand',
+    freq: 'daily',
+    expandable: true,
+    subtasks: [
+      { id:'laundry_dry',  name:'Switch laundry to dryer',      tag:'prep'     },
+      { id:'outfit_tmrw',  name:'Lay out tomorrow\'s outfit',   tag:'tomorrow' },
+      { id:'pack_bag',     name:'Pack bag / prep for work',     tag:'prep'     },
+      { id:'lunch_tmrw',   name:'Make lunch for tomorrow',      tag:'tomorrow' },
+      { id:'coffee_set',   name:'Set coffee maker for morning', tag:'prep'     },
+    ]
+  },
+  // ── SKINCARE / NIGHT ROUTINE ───────────────────────────────────────────────
+  {
+    id: 'skincare',
+    icon: '🧴',
+    name: 'Night Skincare Routine',
+    meta: 'Tap to expand',
+    freq: 'daily',
+    expandable: true,
+    subtasks: [
+      { id:'skin_wash',    name:'Wash face',           tag:'skin' },
+      { id:'skin_tone',    name:'Toner',               tag:'skin' },
+      { id:'skin_moist',   name:'Moisturizer',         tag:'skin' },
+      { id:'skin_teeth',   name:'Brush teeth',         tag:'skin' },
+      { id:'skin_floss',   name:'Floss',               tag:'skin' },
+    ]
+  },
+  // ── WIND DOWN ──────────────────────────────────────────────────────────────
+  { id:'screens', icon:'📵', name:'No Screens After 9 PM', meta:'Put the phone down — rest your mind', freq:'daily' },
+  // ── REFLECTION ─────────────────────────────────────────────────────────────
+  { id:'reflect', icon:'📓', name:'Evening Reflection', meta:'Tap to expand', freq:'daily', expandable:true, isReflect:true },
+];
+
+// ── State helpers ─────────────────────────────────────────────────────────────
+const expanded = new Set(['prep','skincare','reflect']);
+
+function todayKey() { return new Date().toISOString().slice(0,10); }
+function load()     { try { return JSON.parse(localStorage.getItem('er1')||'{}'); } catch { return {}; } }
+function save(s)    { localStorage.setItem('er1', JSON.stringify(s)); }
+
+function habitStreak(state, id) {
+  let n=0;
+  for(let i=1;i<=365;i++){
+    const d=new Date(); d.setDate(d.getDate()-i);
+    const k=d.toISOString().slice(0,10);
+    if(state[k]?.habits?.[id]==='done') n++; else break;
+  }
+  return n;
+}
+function globalStreak(state) {
+  let n=0;
+  for(let i=1;i<=365;i++){
+    const d=new Date(); d.setDate(d.getDate()-i);
+    const k=d.toISOString().slice(0,10);
+    if(state[k]?.completed) n++; else break;
+  }
+  return n;
+}
+function toggle(state, key, type, id) {
+  if(!state[key]) state[key]={habits:{},subtasks:{}};
+  if(!state[key][type]) state[key][type]={};
+  state[key][type][id]=state[key][type][id]==='done'?null:'done';
+  save(state); render();
+}
+
+// ── Stars ─────────────────────────────────────────────────────────────────────
+function makeStars() {
+  const container=document.getElementById('stars');
+  for(let i=0;i<40;i++){
+    const s=document.createElement('div');
+    s.className='star';
+    const size=Math.random()*2+1;
+    s.style.cssText=`width:${size}px;height:${size}px;top:${Math.random()*100}%;left:${Math.random()*100}%;animation-delay:${Math.random()*3}s;animation-duration:${2+Math.random()*3}s`;
+    container.appendChild(s);
+  }
+}
+
+// ── Render ────────────────────────────────────────────────────────────────────
+function render() {
+  const state=load(), today=todayKey();
+  const td=state[today]||{habits:{},subtasks:{}};
+
+  document.getElementById('dateChip').textContent =
+    new Date().toLocaleDateString('en-CA',{weekday:'short',month:'short',day:'numeric'});
+  document.getElementById('tomorrowBadge').textContent = '🌅 Prepping for ' + tomorrowName();
+
+  // Progress count
+  let total=0, done=0;
+  HABITS.forEach(h=>{
+    if(h.expandable && h.isReflect){
+      ['reflect_eve','reflect_tmrw'].forEach(id=>{ total++; if(td.subtasks?.[id]==='done') done++; });
+    } else if(h.expandable){
+      h.subtasks.forEach(s=>{ total++; if(td.subtasks?.[s.id]==='done') done++; });
+    } else {
+      total++; if(td.habits?.[h.id]==='done') done++;
+    }
+  });
+
+  document.getElementById('progFill').style.width=(total?(done/total)*100:0)+'%';
+  document.getElementById('progLabel').textContent=done+' / '+total;
+
+  const gs=globalStreak(state);
+  const sp=document.getElementById('streakPill');
+  sp.style.display=gs>0?'flex':'none';
+  document.getElementById('streakNum').textContent=gs;
+
+  const allDone=total>0&&done===total;
+  document.getElementById('doneBanner').classList.toggle('show',allDone);
+  if(allDone){ state[today]={...td,completed:true}; save(state); }
+
+  const list=document.getElementById('habitList');
+  list.innerHTML='';
+
+  HABITS.forEach(h=>{
+    const card=document.createElement('div');
+
+    let isDone=false;
+    if(h.expandable&&h.isReflect){
+      isDone=td.subtasks?.reflect_eve==='done'&&td.subtasks?.reflect_tmrw==='done';
+    } else if(h.expandable){
+      isDone=h.subtasks.every(s=>td.subtasks?.[s.id]==='done');
+    } else {
+      isDone=td.habits?.[h.id]==='done';
+    }
+    card.className='habit-card'+(isDone?' completed':'');
+
+    const hs=habitStreak(state,h.id);
+    const isExp=expanded.has(h.id);
+
+    const main=document.createElement('div');
+    main.className='habit-main';
+    main.innerHTML=`
+      <div class="habit-icon">${h.icon}</div>
+      <div class="habit-body">
+        <div class="habit-name">${h.name}</div>
+        <div class="habit-sub">${h.meta}</div>
+        ${hs>1?`<div class="habit-streak">🌙 ${hs} day streak</div>`:''}
+      </div>
+      ${h.expandable?`<button class="expand-toggle"><span class="expand-arrow${isExp?' open':''}">▼</span></button>`:''}
+      ${!h.expandable?`<div class="check-circle">${isDone?'✓':''}</div>`:''}
+    `;
+    card.appendChild(main);
+
+    if(h.expandable){
+      const panel=document.createElement('div');
+      panel.className='subtasks'+(isExp?' open':'');
+      const inner=document.createElement('div');
+      inner.className='subtask-inner';
+
+      if(h.isReflect){
+        const ep=getDailyPrompt(EVENING_PROMPTS);
+        const tp=getDailyPrompt(TOMORROW_PROMPTS);
+
+        const lbl1=document.createElement('div'); lbl1.className='sub-group-label'; lbl1.textContent='Reflect on Today';
+        inner.appendChild(lbl1);
+        const eb=document.createElement('div'); eb.className='reflection-prompt';
+        eb.innerHTML=`<div class="prompt-q">${ep.q}</div><div class="prompt-hint">${ep.hint}</div>`;
+        inner.appendChild(eb);
+        inner.appendChild(makeCheckRow('reflect_eve','Reflection done ✓',td,today,'reflect'));
+
+        const lbl2=document.createElement('div'); lbl2.className='sub-group-label'; lbl2.textContent='Set Up Tomorrow';
+        inner.appendChild(lbl2);
+        const tb=document.createElement('div'); tb.className='reflection-prompt';
+        tb.innerHTML=`<div class="prompt-q">${tp.q}</div><div class="prompt-hint">${tp.hint}</div>`;
+        inner.appendChild(tb);
+        inner.appendChild(makeCheckRow('reflect_tmrw','Tomorrow planned ✓',td,today,'reflect'));
+
+        // Quick links
+        const ql=document.createElement('div'); ql.className='quick-links';
+        [
+          { href:'calshow://',          cls:'ql-cal',    icon:'📅', label:"Open Tomorrow in Apple Calendar" },
+          { href:'x-apple-reminderkit://', cls:'ql-remind', icon:'🔔', label:'Open Reminders — Personal List' },
+        ].forEach(l=>{
+          const a=document.createElement('a'); a.href=l.href; a.className=`quick-link-row ${l.cls}`;
+          a.innerHTML=`<div class="ql-icon">${l.icon}</div><div class="ql-label">${l.label}</div><div class="ql-arrow">↗</div>`;
+          ql.appendChild(a);
+        });
+        inner.appendChild(ql);
+
+      } else {
+        const lbl=document.createElement('div'); lbl.className='sub-group-label'; lbl.textContent='Tasks';
+        inner.appendChild(lbl);
+        h.subtasks.forEach(s=>{
+          const done=td.subtasks?.[s.id]==='done';
+          const row=document.createElement('div');
+          row.className='subtask-row'+(done?' done':'');
+          row.innerHTML=`
+            <div class="sub-check">${done?'✓':''}</div>
+            <div class="sub-name">${s.name}</div>
+            <div class="sub-tag ${s.tag}">${s.tag==='tomorrow'?'Tomorrow':'Prep'}</div>
+          `;
+          row.addEventListener('click',()=>{ const st=load(); toggle(st,today,'subtasks',s.id); });
+          inner.appendChild(row);
+        });
+      }
+
+      panel.appendChild(inner);
+      card.appendChild(panel);
+
+      const expBtn=main.querySelector('.expand-toggle');
+      const toggleExp=()=>{ expanded.has(h.id)?expanded.delete(h.id):expanded.add(h.id); render(); };
+      expBtn&&expBtn.addEventListener('click',e=>{ e.stopPropagation(); toggleExp(); });
+      main.addEventListener('click',e=>{ if(e.target.closest('.expand-toggle')) return; toggleExp(); });
+    } else {
+      main.addEventListener('click',()=>{ const s=load(); toggle(s,today,'habits',h.id); });
+    }
+
+    list.appendChild(card);
+  });
+}
+
+function makeCheckRow(id, label, td, today, tagClass) {
+  const done=td.subtasks?.[id]==='done';
+  const row=document.createElement('div');
+  row.className='subtask-row'+(done?' done':'');
+  row.style.marginTop='4px';
+  row.innerHTML=`
+    <div class="sub-check">${done?'✓':''}</div>
+    <div class="sub-name">${label}</div>
+    <div class="sub-tag ${tagClass}">Reflect</div>
+  `;
+  row.addEventListener('click',()=>{ const st=load(); toggle(st,today,'subtasks',id); });
+  return row;
+}
+
+function resetDay(){
+  const s=load(); s[todayKey()]={habits:{},subtasks:{}}; save(s); render();
+}
+
+makeStars();
+render();
+</script>
+</body>
+</html>

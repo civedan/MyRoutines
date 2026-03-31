@@ -1,0 +1,231 @@
+import { useState, useRef } from "react";
+
+const REMINDERS = {
+  "Work Admin": ["Aged AR", "Timesheet", "Expenses", "Monthly PreBills"],
+  "YBN - Membership": ["Get new website developed", "Monthly newsletter template setup"],
+  "Skywater Landing": ["Final Schedule C-B", "All design notes and files in folder"],
+  "2180 Beacon": ["Post Design Review", "Exterior Structure Design"],
+  "Village Green": ["Schedule C-B", "Design notes in folder", "Pergola Review"],
+  "Tillicum Townhouse": ["Complete Seismic Redesign"],
+  "Shelbourne Townhouses": ["Sign and Seal the IFC Set"],
+  "INBOX": ["Sooke River Hotel - Review w/ Waymark", "Email McKenzie about RRSPs"],
+};
+
+const HOURS = Array.from({ length: 14 }, (_, i) => i + 7);
+const COLORS = ["#4f8ef7","#f7834f","#4fc97a","#c94f8e","#f7c94f","#4fc9c9","#9b4ff7","#f74f4f"];
+
+function formatHour(h) {
+  if (h === 12) return "12 PM";
+  return h > 12 ? `${h-12} PM` : `${h} AM`;
+}
+
+export default function DayPlanner() {
+  const [tasks, setTasks] = useState([]);
+  const [input, setInput] = useState("");
+  const [blocks, setBlocks] = useState({});
+  const [dragTask, setDragTask] = useState(null);
+  const [blockSize, setBlockSize] = useState(1);
+  const [showImport, setShowImport] = useState(false);
+  const [selectedList, setSelectedList] = useState("Work Admin");
+  const colorIdx = useRef(0);
+
+  const nextColor = () => COLORS[(colorIdx.current++) % COLORS.length];
+
+  const addTask = () => {
+    if (!input.trim()) return;
+    setTasks(t => [...t, { id: Date.now(), label: input.trim(), color: nextColor() }]);
+    setInput("");
+  };
+
+  const importTask = (label) => {
+    if (tasks.find(t => t.label === label)) return;
+    setTasks(t => [...t, { id: Date.now() + Math.random(), label, color: nextColor() }]);
+  };
+
+  const removeTask = (id) => {
+    setTasks(t => t.filter(t => t.id !== id));
+    setBlocks(b => {
+      const nb = {...b};
+      Object.keys(nb).forEach(k => { if (nb[k]?.taskId === id) delete nb[k]; });
+      return nb;
+    });
+  };
+
+  const occupiedHours = new Set();
+  Object.entries(blocks).forEach(([k, v]) => {
+    const [h, s] = k.split("-").map(Number);
+    for (let i = 0; i < s; i++) occupiedHours.add(h + i);
+  });
+
+  const canDrop = (hour) => {
+    for (let i = 0; i < blockSize; i++) {
+      if (occupiedHours.has(hour + i)) {
+        // allow if it's the dragged task's own block
+        const existingKey = Object.keys(blocks).find(k => {
+          const [h, s] = k.split("-").map(Number);
+          return h + i >= h && h + i < h + s && blocks[k]?.taskId === dragTask?.id;
+        });
+        if (!existingKey) return false;
+      }
+    }
+    return true;
+  };
+
+  const onDrop = (hour) => {
+    if (!dragTask || !canDrop(hour)) return;
+    const key = `${hour}-${blockSize}`;
+    if (dragTask.fromKey) {
+      setBlocks(b => { const nb = {...b}; delete nb[dragTask.fromKey]; return nb; });
+    }
+    setBlocks(b => ({ ...b, [key]: { taskId: dragTask.id, label: dragTask.label, color: dragTask.color, size: blockSize } }));
+    setDragTask(null);
+  };
+
+  const scheduledIds = new Set(Object.values(blocks).map(b => b.taskId));
+  const unscheduled = tasks.filter(t => !scheduledIds.has(t.id));
+  const totalHours = Object.values(blocks).reduce((s, b) => s + b.size, 0);
+
+  return (
+    <div style={{ fontFamily: "system-ui, sans-serif", background: "#0f1117", minHeight: "100vh", color: "#e8eaf0", padding: "20px 16px" }}>
+      <div style={{ maxWidth: 740, margin: "0 auto" }}>
+
+        <div style={{ marginBottom: 24 }}>
+          <div style={{ fontSize: 11, letterSpacing: 3, color: "#6c7a9c", textTransform: "uppercase" }}>
+            {new Date().toLocaleDateString("en-CA", { weekday: "long", month: "long", day: "numeric" })}
+          </div>
+          <h1 style={{ margin: "4px 0 0", fontSize: 26, fontWeight: 700 }}>Day Planner</h1>
+          <div style={{ fontSize: 13, color: "#6c7a9c", marginTop: 4 }}>{totalHours}h scheduled · {unscheduled.length} tasks remaining</div>
+        </div>
+
+        <div style={{ display: "flex", gap: 8, marginBottom: 20, alignItems: "center" }}>
+          <span style={{ fontSize: 12, color: "#6c7a9c" }}>Block size:</span>
+          {[1,2,3].map(s => (
+            <button key={s} onClick={() => setBlockSize(s)} style={{
+              padding: "5px 14px", borderRadius: 8, border: "none", cursor: "pointer",
+              fontSize: 13, fontWeight: 600,
+              background: blockSize === s ? "#4f8ef7" : "#1e2130",
+              color: blockSize === s ? "#fff" : "#8892b0"
+            }}>{s}h</button>
+          ))}
+        </div>
+
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 250px", gap: 20 }}>
+
+          {/* Timeline */}
+          <div>
+            <div style={{ fontSize: 11, letterSpacing: 2, color: "#6c7a9c", textTransform: "uppercase", marginBottom: 10 }}>Timeline — drag tasks here</div>
+            {HOURS.map(hour => {
+              const blockEntry = Object.entries(blocks).find(([k]) => Number(k.split("-")[0]) === hour);
+              const isCovered = occupiedHours.has(hour) && !blockEntry;
+
+              return (
+                <div key={hour} style={{ display: "flex", marginBottom: 3 }}>
+                  <div style={{ width: 50, fontSize: 11, color: "#4a5568", paddingTop: 12, flexShrink: 0 }}>{formatHour(hour)}</div>
+                  <div
+                    onDragOver={e => e.preventDefault()}
+                    onDrop={() => onDrop(hour)}
+                    style={{
+                      flex: 1, minHeight: 44, borderRadius: 8,
+                      border: isCovered ? "1px solid transparent" : "1px dashed #2a2f45",
+                      background: isCovered ? "transparent" : dragTask ? "#1a2035" : "#161b27",
+                      position: "relative", transition: "background 0.1s"
+                    }}
+                  >
+                    {blockEntry && (
+                      <div
+                        draggable
+                        onDragStart={() => setDragTask({ id: blockEntry[1].taskId, label: blockEntry[1].label, color: blockEntry[1].color, fromKey: blockEntry[0] })}
+                        style={{
+                          position: "absolute", inset: 0,
+                          background: blockEntry[1].color + "20",
+                          borderLeft: `3px solid ${blockEntry[1].color}`,
+                          borderRadius: 8, padding: "10px 12px",
+                          display: "flex", alignItems: "center", justifyContent: "space-between", cursor: "grab"
+                        }}
+                      >
+                        <div>
+                          <div style={{ fontSize: 13, fontWeight: 600 }}>{blockEntry[1].label}</div>
+                          <div style={{ fontSize: 11, color: "#6c7a9c", marginTop: 2 }}>{blockEntry[1].size}h · {formatHour(hour)} – {formatHour(hour + blockEntry[1].size)}</div>
+                        </div>
+                        <button onClick={() => setBlocks(b => { const nb={...b}; delete nb[blockEntry[0]]; return nb; })}
+                          style={{ background: "none", border: "none", color: "#4a5568", cursor: "pointer", fontSize: 18 }}>×</button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Sidebar */}
+          <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+
+            {/* Add task */}
+            <div style={{ background: "#161b27", borderRadius: 12, padding: 14 }}>
+              <div style={{ fontSize: 11, letterSpacing: 2, color: "#6c7a9c", textTransform: "uppercase", marginBottom: 10 }}>Add Task</div>
+              <div style={{ display: "flex", gap: 8 }}>
+                <input value={input} onChange={e => setInput(e.target.value)} onKeyDown={e => e.key === "Enter" && addTask()}
+                  placeholder="Type a task..."
+                  style={{ flex: 1, background: "#0f1117", border: "1px solid #2a2f45", borderRadius: 8, padding: "8px 10px", color: "#e8eaf0", fontSize: 13, outline: "none" }} />
+                <button onClick={addTask} style={{ background: "#4f8ef7", border: "none", borderRadius: 8, color: "#fff", padding: "8px 12px", cursor: "pointer", fontWeight: 700, fontSize: 15 }}>+</button>
+              </div>
+            </div>
+
+            {/* Import */}
+            <div style={{ background: "#161b27", borderRadius: 12, padding: 14 }}>
+              <button onClick={() => setShowImport(s => !s)} style={{ background: "none", border: "none", color: "#4f8ef7", cursor: "pointer", fontSize: 13, fontWeight: 600, padding: 0 }}>
+                {showImport ? "▾" : "▸"} Import from Reminders
+              </button>
+              {showImport && (
+                <div style={{ marginTop: 10 }}>
+                  <select value={selectedList} onChange={e => setSelectedList(e.target.value)}
+                    style={{ width: "100%", background: "#0f1117", border: "1px solid #2a2f45", borderRadius: 8, padding: "7px 8px", color: "#e8eaf0", fontSize: 12, marginBottom: 8, outline: "none" }}>
+                    {Object.keys(REMINDERS).map(l => <option key={l}>{l}</option>)}
+                  </select>
+                  {REMINDERS[selectedList].map(r => {
+                    const added = !!tasks.find(t => t.label === r);
+                    return (
+                      <button key={r} onClick={() => importTask(r)} disabled={added}
+                        style={{ width: "100%", background: added ? "#1a1f2e" : "#1e2a40", border: `1px solid ${added ? "#2a2f45" : "#4f8ef744"}`,
+                          borderRadius: 8, padding: "8px 10px", color: added ? "#4a5568" : "#a8c0f0",
+                          fontSize: 12, cursor: added ? "default" : "pointer", textAlign: "left", marginBottom: 5 }}>
+                        {added ? "✓ " : "+ "}{r}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+
+            {/* Task pool */}
+            <div style={{ background: "#161b27", borderRadius: 12, padding: 14, flex: 1 }}>
+              <div style={{ fontSize: 11, letterSpacing: 2, color: "#6c7a9c", textTransform: "uppercase", marginBottom: 10 }}>
+                Tasks ({unscheduled.length})
+              </div>
+              {unscheduled.length === 0 && tasks.length > 0 && (
+                <div style={{ fontSize: 12, color: "#4fc97a", fontStyle: "italic" }}>🎉 All tasks scheduled!</div>
+              )}
+              {unscheduled.length === 0 && tasks.length === 0 && (
+                <div style={{ fontSize: 12, color: "#4a5568", fontStyle: "italic" }}>Add or import tasks above</div>
+              )}
+              {unscheduled.map(task => (
+                <div key={task.id} draggable onDragStart={() => setDragTask({ ...task, fromKey: null })}
+                  style={{ display: "flex", alignItems: "center", gap: 8, padding: "9px 10px", borderRadius: 8,
+                    background: "#0f1117", border: `1px solid ${task.color}33`, marginBottom: 6,
+                    cursor: "grab", borderLeft: `3px solid ${task.color}` }}>
+                  <div style={{ flex: 1, fontSize: 13, color: "#c8d0e0" }}>{task.label}</div>
+                  <button onClick={() => removeTask(task.id)}
+                    style={{ background: "none", border: "none", color: "#4a5568", cursor: "pointer", fontSize: 16 }}>×</button>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        <div style={{ marginTop: 16, fontSize: 11, color: "#2a3050", textAlign: "center" }}>
+          Select block size · Drag tasks onto the timeline · Drag blocks to reschedule
+        </div>
+      </div>
+    </div>
+  );
+}

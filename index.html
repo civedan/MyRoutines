@@ -120,6 +120,7 @@
     border-radius: 22px;
     padding: 22px 24px;
     text-decoration: none;
+    color: inherit;
     display: flex;
     align-items: center;
     gap: 18px;
@@ -155,6 +156,7 @@
 
   .morning-card::before { background: #ff9a44; }
   .evening-card::before { background: #9b87f5; }
+  .planner-card::before { background: #38bdf8; }
 
   .card-icon {
     font-size: 38px;
@@ -183,6 +185,7 @@
 
   .morning-card .card-title { color: #ffe0c0; }
   .evening-card .card-title { color: #e0d4ff; }
+  .planner-card .card-title { color: #bae6fd; }
 
   .card-meta {
     font-size: 12px;
@@ -222,6 +225,12 @@
 
   .morning-card .active-pill { background: #ff9a4422; color: #ff9a44; border: 1px solid #ff9a4444; }
   .evening-card .active-pill { background: #9b87f522; color: #9b87f5; border: 1px solid #9b87f544; }
+
+  .routine-card.planner-card {
+    background: linear-gradient(135deg, #0a1018 0%, #081018 100%);
+    border-color: #38bdf830;
+  }
+  .planner-card .card-icon { color: #38bdf8; }
 
   @keyframes pulse {
     0%, 100% { opacity: 1; }
@@ -280,7 +289,7 @@
 
   <div class="routines">
     <!-- Morning Card -->
-    <div class="routine-card morning-card" id="morningCard" onclick="openRoutine('morning')">
+    <a class="routine-card morning-card" id="morningCard" href="morning-routine.html">
       <div class="card-icon">☀️</div>
       <div class="card-body">
         <div class="card-label">Starts at 6:00 AM</div>
@@ -296,10 +305,10 @@
         </svg>
         <div class="card-progress-label" id="morningPct">0%</div>
       </div>
-    </div>
+    </a>
 
     <!-- Evening Card -->
-    <div class="routine-card evening-card" id="eveningCard" onclick="openRoutine('evening')">
+    <a class="routine-card evening-card" id="eveningCard" href="evening-routine.html">
       <div class="card-icon">🌙</div>
       <div class="card-body">
         <div class="card-label">Starts at 8:00 PM</div>
@@ -315,7 +324,17 @@
         </svg>
         <div class="card-progress-label" id="eveningPct">0%</div>
       </div>
-    </div>
+    </a>
+
+    <!-- Time Blocker Card -->
+    <a class="routine-card planner-card" href="time-blocker.html">
+      <div class="card-icon">🗓️</div>
+      <div class="card-body">
+        <div class="card-label">Day Planning</div>
+        <div class="card-title">Time<br>Blocker</div>
+        <div class="card-meta">Schedule your day</div>
+      </div>
+    </a>
   </div>
 
   <!-- Quick links -->
@@ -342,14 +361,6 @@
 // We read progress directly from the same localStorage the trackers use.
 
 function todayKey() { return new Date().toISOString().slice(0,10); }
-
-function getProgress(storageKey, countFn) {
-  try {
-    const state = JSON.parse(localStorage.getItem(storageKey) || '{}');
-    const td = state[todayKey()] || { habits:{}, subtasks:{} };
-    return countFn(td);
-  } catch { return { done:0, total:0 }; }
-}
 
 // Morning routine items (mirrors HABITS in morning tracker)
 function morningCount(td) {
@@ -408,19 +419,6 @@ function eveningCount(td) {
   ['reflect_eve','reflect_tmrw'].forEach(id=>{ total++; if(td.subtasks?.[id]==='done') done++; });
 
   return { done, total };
-}
-
-// ── Routing ───────────────────────────────────────────────────────────────────
-// Both trackers are expected to be in the same folder / deployed together.
-// If opening from filesystem, they'll be siblings. If hosted, same directory.
-function openRoutine(which) {
-  // Try to open sibling files
-  const base = window.location.href.replace(/[^/]*$/, '');
-  if(which==='morning'){
-    window.location.href = base + 'morning-routine.html';
-  } else {
-    window.location.href = base + 'evening-routine.html';
-  }
 }
 
 // ── Clock & UI ────────────────────────────────────────────────────────────────

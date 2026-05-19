@@ -1,0 +1,619 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Pomodoro">
+<title>Pomodoro Timer</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --text: #f0f0f8;
+  --muted: #9090b0;
+  --border: #ffffff18;
+  --surface: #ffffff0c;
+  --surface2: #ffffff18;
+  --work-color: #f87171;
+  --break-color: #4ade80;
+  --long-color: #a78bfa;
+  --CIRC: 779.2; /* 2π×124 */
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+body {
+  font-family: 'DM Sans', sans-serif;
+  color: var(--text);
+  min-height: 100svh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: #080810;
+  overflow: hidden;
+}
+
+/* ── Dynamic background ──────────────────────────────────────────── */
+.bg {
+  position: fixed; inset: 0; z-index: 0;
+  transition: background 1.2s ease;
+}
+.bg.idle-bg {
+  background:
+    radial-gradient(ellipse at 50% 0%, #f8717112 0%, transparent 55%),
+    linear-gradient(160deg, #080810 0%, #0c0c18 100%);
+}
+.bg.work-bg {
+  background:
+    radial-gradient(ellipse at 50% 0%, #f8717128 0%, transparent 55%),
+    radial-gradient(ellipse at 20% 90%, #dc262618 0%, transparent 50%),
+    linear-gradient(160deg, #110808 0%, #190a0a 100%);
+}
+.bg.break-bg {
+  background:
+    radial-gradient(ellipse at 50% 0%, #4ade8025 0%, transparent 55%),
+    radial-gradient(ellipse at 80% 90%, #16a34a18 0%, transparent 50%),
+    linear-gradient(160deg, #080f09 0%, #081410 100%);
+}
+.bg.long-bg {
+  background:
+    radial-gradient(ellipse at 50% 0%, #a78bfa25 0%, transparent 55%),
+    radial-gradient(ellipse at 20% 90%, #4f46e518 0%, transparent 50%),
+    linear-gradient(160deg, #08080f 0%, #0d0b1a 100%);
+}
+
+/* ── Flash overlay ───────────────────────────────────────────────── */
+.flash {
+  position: fixed; inset: 0; z-index: 200;
+  pointer-events: none; opacity: 0;
+}
+.flash.pop { animation: flashPop 0.7s ease forwards; }
+@keyframes flashPop { 0%{opacity:.55} 100%{opacity:0} }
+
+/* ── Nav ─────────────────────────────────────────────────────────── */
+.nav {
+  position: relative; z-index: 10;
+  width: 100%; max-width: 420px;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 18px 22px 0;
+}
+
+.back-btn {
+  display: flex; align-items: center; gap: 5px;
+  color: var(--muted); text-decoration: none;
+  font-size: 13px; font-weight: 500;
+  transition: color 0.15s;
+}
+.back-btn:active { color: var(--text); }
+.back-btn svg { width: 15px; height: 15px; }
+
+.mute-btn {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 50%; width: 36px; height: 36px;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; font-size: 16px;
+  transition: background 0.15s, transform 0.1s;
+  color: var(--text);
+}
+.mute-btn:active { transform: scale(0.9); }
+.mute-btn.muted { opacity: 0.4; }
+
+/* ── Main content ────────────────────────────────────────────────── */
+.content {
+  position: relative; z-index: 1;
+  width: 100%; max-width: 420px;
+  flex: 1;
+  display: flex; flex-direction: column;
+  align-items: center;
+  padding: 18px 24px 36px;
+}
+
+/* ── Phase header ────────────────────────────────────────────────── */
+.phase-header { text-align: center; margin-bottom: 22px; }
+
+.phase-tag {
+  font-size: 11px; text-transform: uppercase;
+  letter-spacing: 1.5px; color: var(--muted); margin-bottom: 5px;
+}
+
+.phase-title {
+  font-family: 'DM Serif Display', serif;
+  font-size: 26px; line-height: 1.15;
+  transition: color 0.6s;
+}
+.phase-title.work    { color: #fca5a5; }
+.phase-title.sbreak  { color: #86efac; }
+.phase-title.lbreak  { color: #c4b5fd; }
+.phase-title.idle    { color: var(--text); }
+
+/* ── Timer ring ──────────────────────────────────────────────────── */
+.ring-wrap {
+  position: relative;
+  width: 270px; height: 270px;
+  margin-bottom: 24px;
+  flex-shrink: 0;
+}
+
+.ring-wrap svg { transform: rotate(-90deg); }
+
+.ring-track { stroke: #ffffff0e; }
+
+.ring-fill {
+  stroke-linecap: round;
+  stroke-dasharray: 779.2;
+  stroke-dashoffset: 779.2;
+  transition: stroke-dashoffset 0.9s linear, stroke 0.6s ease;
+}
+
+/* Glow filter applied via JS */
+
+.ring-center {
+  position: absolute; top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  text-align: center; pointer-events: none;
+}
+
+.timer-digits {
+  font-size: 62px; font-weight: 300;
+  letter-spacing: -3px; line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.timer-sublabel {
+  font-size: 12px; color: var(--muted);
+  letter-spacing: 0.4px; margin-top: 3px;
+}
+
+/* ── Session dots ────────────────────────────────────────────────── */
+.dots { display: flex; gap: 12px; margin-bottom: 28px; }
+
+.dot {
+  width: 11px; height: 11px; border-radius: 50%;
+  border: 1.5px solid #ffffff28; background: transparent;
+  transition: background 0.4s, border-color 0.4s, transform 0.25s, box-shadow 0.4s;
+}
+.dot.done {
+  background: var(--work-color); border-color: var(--work-color);
+  box-shadow: 0 0 8px #f8717180;
+}
+.dot.active {
+  border-color: var(--work-color);
+  transform: scale(1.35);
+  box-shadow: 0 0 10px #f8717160;
+}
+
+/* ── Controls ────────────────────────────────────────────────────── */
+.controls {
+  display: flex; align-items: center; gap: 22px;
+  margin-bottom: 28px;
+}
+
+.btn-side {
+  width: 54px; height: 54px; border-radius: 50%;
+  background: var(--surface); border: 1px solid var(--border);
+  color: var(--muted); font-size: 20px;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+  transition: background 0.15s, transform 0.1s, color 0.15s;
+}
+.btn-side:active  { transform: scale(0.91); background: var(--surface2); }
+.btn-side:hover   { color: var(--text); }
+
+.btn-main {
+  width: 90px; height: 90px; border-radius: 50%;
+  border: none; cursor: pointer; font-size: 30px;
+  display: flex; align-items: center; justify-content: center;
+  transition: transform 0.15s, box-shadow 0.5s, background 0.5s;
+  position: relative;
+}
+.btn-main::after {
+  content: '';
+  position: absolute; inset: -4px; border-radius: 50%;
+  border: 1.5px solid #ffffff18;
+  pointer-events: none;
+}
+.btn-main:active { transform: scale(0.91); }
+
+/* button colour states */
+.btn-main.c-idle  { background: radial-gradient(circle at 35% 35%,#fb8b8b,#b91c1c); box-shadow:0 0 36px #f8717158; }
+.btn-main.c-work  { background: radial-gradient(circle at 35% 35%,#fb8b8b,#b91c1c); box-shadow:0 0 36px #f8717168; }
+.btn-main.c-break { background: radial-gradient(circle at 35% 35%,#6ee7a0,#15803d); box-shadow:0 0 36px #4ade8068; }
+.btn-main.c-long  { background: radial-gradient(circle at 35% 35%,#c4b5fd,#5b21b6); box-shadow:0 0 36px #a78bfa68; }
+
+/* ── Stats ───────────────────────────────────────────────────────── */
+.stats {
+  display: grid; grid-template-columns: 1fr 1fr 1fr;
+  gap: 10px; width: 100%;
+}
+
+.stat {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 16px; padding: 14px 8px;
+  text-align: center;
+}
+
+.stat-n {
+  font-size: 28px; font-weight: 300;
+  letter-spacing: -1px; line-height: 1;
+}
+
+.stat-l {
+  font-size: 10px; color: var(--muted);
+  margin-top: 5px; text-transform: uppercase;
+  letter-spacing: 0.4px; line-height: 1.3;
+}
+
+/* ── Phase complete message ──────────────────────────────────────── */
+.toast {
+  position: fixed; bottom: 48px; left: 50%;
+  transform: translateX(-50%) translateY(20px);
+  background: #1a1a2e; border: 1px solid var(--border);
+  border-radius: 40px; padding: 10px 20px;
+  font-size: 13px; color: var(--text);
+  opacity: 0; z-index: 100;
+  transition: opacity 0.3s, transform 0.3s;
+  white-space: nowrap; pointer-events: none;
+}
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+</style>
+</head>
+<body>
+
+<div class="bg idle-bg" id="bgEl"></div>
+<div class="flash" id="flashEl"></div>
+
+<nav class="nav">
+  <a class="back-btn" href="index.html">
+    <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+      <path d="M10 3L5 8l5 5"/>
+    </svg>
+    My Routines
+  </a>
+  <button class="mute-btn" id="muteBtn" onclick="toggleMute()" title="Toggle sound">🔔</button>
+</nav>
+
+<div class="content">
+
+  <div class="phase-header">
+    <div class="phase-tag" id="phaseTag">POMODORO TIMER</div>
+    <div class="phase-title idle" id="phaseTitle">Ready to Focus</div>
+  </div>
+
+  <div class="ring-wrap">
+    <svg width="270" height="270" viewBox="0 0 270 270" id="ringSvg">
+      <defs>
+        <filter id="glow-work">
+          <feGaussianBlur stdDeviation="4" result="blur"/>
+          <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+        </filter>
+        <filter id="glow-break">
+          <feGaussianBlur stdDeviation="4" result="blur"/>
+          <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+        </filter>
+        <filter id="glow-long">
+          <feGaussianBlur stdDeviation="4" result="blur"/>
+          <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+        </filter>
+      </defs>
+      <circle class="ring-track" cx="135" cy="135" r="124" fill="none" stroke-width="5"/>
+      <circle class="ring-fill" cx="135" cy="135" r="124" fill="none" stroke-width="5"
+              stroke="#f87171" id="ringFill"/>
+    </svg>
+    <div class="ring-center">
+      <div class="timer-digits" id="timerDigits">25:00</div>
+      <div class="timer-sublabel" id="timerSub">tap ▶ to start</div>
+    </div>
+  </div>
+
+  <div class="dots" id="dotsRow">
+    <div class="dot active" id="d0"></div>
+    <div class="dot"        id="d1"></div>
+    <div class="dot"        id="d2"></div>
+  </div>
+
+  <div class="controls">
+    <button class="btn-side" id="btnReset" onclick="resetTimer()" title="Reset">↺</button>
+    <button class="btn-main c-idle" id="btnMain" onclick="toggleTimer()">▶</button>
+    <button class="btn-side" id="btnSkip" onclick="skipPhase()" title="Skip phase">⏭</button>
+  </div>
+
+  <div class="stats">
+    <div class="stat">
+      <div class="stat-n" id="sTomatoes">0</div>
+      <div class="stat-l">Today</div>
+    </div>
+    <div class="stat">
+      <div class="stat-n" id="sFocus">0m</div>
+      <div class="stat-l">Focus<br>time</div>
+    </div>
+    <div class="stat">
+      <div class="stat-n" id="sBest">0</div>
+      <div class="stat-l">Best<br>day</div>
+    </div>
+  </div>
+
+</div>
+
+<div class="toast" id="toastEl"></div>
+
+<script>
+// ── Constants ─────────────────────────────────────────────────────────────────
+const WORK_S  = 25 * 60;   // 1500s
+const SHORT_S = 5  * 60;   // 300s
+const LONG_S  = 15 * 60;   // 900s
+const CYCLE   = 3;          // work sessions before long break
+const CIRC    = 2 * Math.PI * 124; // ≈779.22
+
+// ── State ─────────────────────────────────────────────────────────────────────
+let phase   = 'idle';   // idle | work | sbreak | lbreak
+let running = false;
+let timeLeft = WORK_S;
+let cyclePos = 0;       // 0–2 (sessions completed this cycle)
+let muted    = false;
+let iv       = null;
+
+// ── Persistence ───────────────────────────────────────────────────────────────
+function todayKey() { return new Date().toISOString().slice(0,10); }
+
+function loadDay() {
+  const raw  = JSON.parse(localStorage.getItem('pom1') || '{}');
+  return raw[todayKey()] || { tomatoes: 0, focusMins: 0 };
+}
+
+function saveDay(d) {
+  const raw = JSON.parse(localStorage.getItem('pom1') || '{}');
+  raw[todayKey()] = d;
+  localStorage.setItem('pom1', JSON.stringify(raw));
+}
+
+function bestDay() {
+  const raw = JSON.parse(localStorage.getItem('pom1') || '{}');
+  return Math.max(0, ...Object.values(raw).map(d => d.tomatoes || 0));
+}
+
+// ── Web Audio chimes ──────────────────────────────────────────────────────────
+let actx = null;
+function getCtx() {
+  if (!actx) actx = new (window.AudioContext || window.webkitAudioContext)();
+  return actx;
+}
+
+function beep(freqs, durSec) {
+  if (muted) return;
+  try {
+    const ctx = getCtx();
+    freqs.forEach(([f, t, d]) => {
+      const osc  = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain); gain.connect(ctx.destination);
+      osc.type = 'sine'; osc.frequency.value = f;
+      const start = ctx.currentTime + t;
+      gain.gain.setValueAtTime(0.0, ctx.currentTime);
+      gain.gain.setValueAtTime(0.28, start);
+      gain.gain.exponentialRampToValueAtTime(0.001, start + d);
+      osc.start(start); osc.stop(start + d + 0.05);
+    });
+  } catch(e) {}
+}
+
+const chimeWorkDone  = () => beep([[523,0,.25],[659,.2,.25],[784,.4,.45]], 1);
+const chimeBreakDone = () => beep([[784,0,.25],[659,.2,.25],[523,.4,.45]], 1);
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+const $  = id => document.getElementById(id);
+const fmt = s  => `${String(Math.floor(s/60)).padStart(2,'0')}:${String(s%60).padStart(2,'0')}`;
+
+function totalSecs() {
+  if (phase==='work')   return WORK_S;
+  if (phase==='sbreak') return SHORT_S;
+  if (phase==='lbreak') return LONG_S;
+  return WORK_S;
+}
+
+function phaseColor() {
+  if (phase==='work')   return '#f87171';
+  if (phase==='sbreak') return '#4ade80';
+  if (phase==='lbreak') return '#a78bfa';
+  return '#f87171';
+}
+
+// ── Toast ─────────────────────────────────────────────────────────────────────
+let toastTimer = null;
+function toast(msg) {
+  const el = $('toastEl');
+  el.textContent = msg;
+  el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove('show'), 3000);
+}
+
+// ── Flash ─────────────────────────────────────────────────────────────────────
+function doFlash(color) {
+  const el = $('flashEl');
+  el.style.background = color;
+  el.classList.remove('pop');
+  void el.offsetWidth;
+  el.classList.add('pop');
+}
+
+// ── Core render ───────────────────────────────────────────────────────────────
+function render() {
+  // Digits
+  $('timerDigits').textContent = fmt(timeLeft);
+
+  // Ring offset
+  const fill = $('ringFill');
+  const total = totalSecs();
+  const progress = (phase==='idle') ? 0 : (total - timeLeft) / total;
+  fill.style.strokeDashoffset = CIRC * (1 - progress);
+  fill.style.stroke = phaseColor();
+
+  // Sublabel
+  const labels = {
+    idle:   'tap ▶ to start',
+    work:   running ? 'deep focus' : 'paused',
+    sbreak: running ? 'take a breath' : 'paused',
+    lbreak: running ? 'well earned rest' : 'paused',
+  };
+  $('timerSub').textContent = labels[phase];
+
+  // Phase header
+  const tags = { idle:'POMODORO TIMER', work:'FOCUS MODE', sbreak:'SHORT BREAK', lbreak:'LONG BREAK — CYCLE COMPLETE' };
+  const titles = {
+    idle:   'Ready to Focus',
+    work:   `Work Session ${Math.min(cyclePos+1, CYCLE)} of ${CYCLE}`,
+    sbreak: 'Short Break',
+    lbreak: 'Long Break — You Earned It',
+  };
+  const titleCls = { idle:'idle', work:'work', sbreak:'sbreak', lbreak:'lbreak' };
+  $('phaseTag').textContent   = tags[phase];
+  const titleEl = $('phaseTitle');
+  titleEl.textContent = titles[phase];
+  titleEl.className   = `phase-title ${titleCls[phase]}`;
+
+  // Background
+  const bgCls = { idle:'idle-bg', work:'work-bg', sbreak:'break-bg', lbreak:'long-bg' };
+  $('bgEl').className = `bg ${bgCls[phase]}`;
+
+  // Main button
+  const mainBtn = $('btnMain');
+  const btnCls  = { idle:'c-idle', work:'c-work', sbreak:'c-break', lbreak:'c-long' };
+  mainBtn.className = `btn-main ${btnCls[phase]}`;
+  mainBtn.textContent = running ? '⏸' : '▶';
+
+  // SVG glow
+  const filterMap = { idle:'', work:'url(#glow-work)', sbreak:'url(#glow-break)', lbreak:'url(#glow-long)' };
+  fill.style.filter = filterMap[phase];
+
+  // Session dots
+  for (let i = 0; i < CYCLE; i++) {
+    const d = $(`d${i}`);
+    d.className = 'dot';
+    if (i < cyclePos) {
+      d.classList.add('done');
+    } else if (i === cyclePos && (phase==='work' || phase==='idle')) {
+      d.classList.add('active');
+    }
+  }
+
+  // Stats
+  const day = loadDay();
+  $('sTomatoes').textContent = day.tomatoes;
+  $('sFocus').textContent    = day.focusMins + 'm';
+  $('sBest').textContent     = bestDay();
+}
+
+// ── Tick ──────────────────────────────────────────────────────────────────────
+function tick() {
+  if (timeLeft > 0) {
+    timeLeft--;
+    render();
+  } else {
+    clearInterval(iv); iv = null;
+    running = false;
+    onPhaseEnd();
+  }
+}
+
+function onPhaseEnd() {
+  try { navigator.vibrate([200, 100, 200]); } catch(e) {}
+
+  if (phase === 'work') {
+    const day = loadDay();
+    day.tomatoes++;
+    day.focusMins += 25;
+    saveDay(day);
+
+    cyclePos++;
+    chimeWorkDone();
+
+    if (cyclePos >= CYCLE) {
+      phase    = 'lbreak';
+      timeLeft = LONG_S;
+      doFlash('#a78bfa30');
+      toast('🎉 Cycle complete! Take a well-earned 15-minute break.');
+    } else {
+      phase    = 'sbreak';
+      timeLeft = SHORT_S;
+      doFlash('#4ade8030');
+      toast(`✅ Session ${cyclePos} done — enjoy a 5-minute break.`);
+    }
+    // Auto-start break
+    running = true;
+    iv = setInterval(tick, 1000);
+  } else {
+    // Break ended → next work session
+    chimeBreakDone();
+    if (phase === 'lbreak') {
+      cyclePos = 0;           // new cycle
+      doFlash('#f8717130');
+      toast('🍅 New cycle! Ready to focus again.');
+    } else {
+      doFlash('#f8717130');
+      toast('⏱ Break over — back to work!');
+    }
+    phase    = 'work';
+    timeLeft = WORK_S;
+    // Auto-start next work session
+    running = true;
+    iv = setInterval(tick, 1000);
+  }
+
+  render();
+}
+
+// ── Controls ──────────────────────────────────────────────────────────────────
+function toggleTimer() {
+  try { getCtx(); } catch(e) {}   // unlock AudioContext on first gesture
+
+  if (phase === 'idle') { phase = 'work'; timeLeft = WORK_S; }
+
+  if (running) {
+    clearInterval(iv); iv = null; running = false;
+  } else {
+    running = true; iv = setInterval(tick, 1000);
+  }
+  render();
+}
+
+function resetTimer() {
+  clearInterval(iv); iv = null;
+  running = false; phase = 'idle'; timeLeft = WORK_S; cyclePos = 0;
+  render();
+}
+
+function skipPhase() {
+  if (phase === 'idle') return;
+  clearInterval(iv); iv = null; running = false;
+  if (phase === 'work') {
+    cyclePos++;
+    if (cyclePos >= CYCLE) { phase = 'lbreak'; timeLeft = LONG_S; }
+    else                   { phase = 'sbreak'; timeLeft = SHORT_S; }
+  } else {
+    if (phase === 'lbreak') cyclePos = 0;
+    phase = 'work'; timeLeft = WORK_S;
+  }
+  render();
+}
+
+function toggleMute() {
+  muted = !muted;
+  const btn = $('muteBtn');
+  btn.textContent = muted ? '🔕' : '🔔';
+  btn.classList.toggle('muted', muted);
+}
+
+// ── Keyboard shortcuts ────────────────────────────────────────────────────────
+document.addEventListener('keydown', e => {
+  if (e.code === 'Space')   { e.preventDefault(); toggleTimer(); }
+  if (e.code === 'KeyR')    resetTimer();
+  if (e.code === 'KeyS')    skipPhase();
+  if (e.code === 'KeyM')    toggleMute();
+});
+
+// ── Init ──────────────────────────────────────────────────────────────────────
+render();
+</script>
+</body>
+</html>

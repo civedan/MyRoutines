@@ -232,6 +232,14 @@
   }
   .planner-card .card-icon { color: #38bdf8; }
 
+  .routine-card.pomodoro-card {
+    background: linear-gradient(135deg, #180a0a 0%, #110808 100%);
+    border-color: #f8717130;
+  }
+  .pomodoro-card .card-icon { color: #f87171; }
+  .pomodoro-card .card-title { color: #ffd0d0; }
+  .pomodoro-card::before { background: #f87171; }
+
   @keyframes pulse {
     0%, 100% { opacity: 1; }
     50% { opacity: 0.5; }
@@ -333,6 +341,25 @@
         <div class="card-label">Day Planning</div>
         <div class="card-title">Time<br>Blocker</div>
         <div class="card-meta">Schedule your day</div>
+      </div>
+    </a>
+
+    <!-- Pomodoro Card -->
+    <a class="routine-card pomodoro-card" href="pomodoro-timer.html">
+      <div class="card-icon">🍅</div>
+      <div class="card-body">
+        <div class="card-label">Focus Sessions</div>
+        <div class="card-title">Pomodoro<br>Timer</div>
+        <div class="card-meta" id="pomMeta">25 min work · 5 min break</div>
+      </div>
+      <div class="card-progress" id="pomProgress">
+        <svg width="44" height="44" viewBox="0 0 44 44">
+          <circle cx="22" cy="22" r="18" fill="none" stroke="#ffffff10" stroke-width="3"/>
+          <circle cx="22" cy="22" r="18" fill="none" stroke="#f87171" stroke-width="3"
+            stroke-linecap="round" stroke-dasharray="113"
+            stroke-dashoffset="113" id="pomRing"/>
+        </svg>
+        <div class="card-progress-label" id="pomPct">🍅</div>
       </div>
     </a>
   </div>
@@ -506,8 +533,34 @@ function makeStars(){
   }
 }
 
+// ── Pomodoro card stats ──────────────────────────────────────────────────────
+function updatePomCard() {
+  const raw  = JSON.parse(localStorage.getItem('pom1') || '{}');
+  const day  = raw[todayKey()] || { tomatoes: 0, focusMins: 0 };
+  const t    = day.tomatoes || 0;
+  const mins = day.focusMins || 0;
+
+  const ring   = document.getElementById('pomRing');
+  const pctEl  = document.getElementById('pomPct');
+  const metaEl = document.getElementById('pomMeta');
+
+  // Show up to 8 tomatoes on the ring (arbitrary target)
+  const target = 8;
+  const pct    = Math.min(t / target, 1);
+  ring.style.strokeDashoffset = 113 - (113 * pct);
+
+  if (t === 0) {
+    pctEl.textContent  = '🍅';
+    metaEl.textContent = '25 min work · 5 min break';
+  } else {
+    pctEl.textContent  = t;
+    metaEl.textContent = `${t} session${t!==1?'s':''} · ${mins}m focused today`;
+  }
+}
+
 makeStars();
 update();
+updatePomCard();
 setInterval(update, 10000); // refresh every 10s
 </script>
 </body>

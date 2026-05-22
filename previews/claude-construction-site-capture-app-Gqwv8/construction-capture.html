@@ -1369,8 +1369,6 @@ const App = (() => {
   // ── Google Sheets ─────────────────────────────────────────────
   async function saveToSheet(url, c) {
     if (!url) throw new Error('Sheet URL not configured');
-    // Use GET with URL params — POST bodies are stripped when Apps Script
-    // redirects to script.googleusercontent.com, GET params survive the redirect
     const params = new URLSearchParams({
       capturedBy: c.capturedBy || '',
       company:    c.company    || '',
@@ -1383,7 +1381,9 @@ const App = (() => {
       timestamp:  c.timestamp  || '',
       mapsUrl:    c.lat ? `https://maps.google.com/?q=${c.lat},${c.lng}` : '',
     });
-    await fetch(`${url}?${params.toString()}`, { method: 'GET', mode: 'no-cors' });
+    const r = await fetch(`${url}?${params.toString()}`, { method: 'GET' });
+    const text = await r.text();
+    if (text.trim() !== 'ok') throw new Error(text.slice(0, 100));
   }
 
   async function testSheet(type) {

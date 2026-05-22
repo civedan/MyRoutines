@@ -686,7 +686,7 @@
             <div class="dest-icon">📝</div>
             <div class="dest-info">
               <span class="dest-name">Apple Notes</span>
-              <span class="dest-hint">Opens iOS Share Sheet</span>
+              <span class="dest-hint">Opens Share Sheet · disabled in Drive Mode</span>
             </div>
             <div class="dest-check">✓</div>
           </div>
@@ -1218,9 +1218,23 @@ const App = (() => {
     S.driveMode = !S.driveMode;
     const bar = document.getElementById('drive-bar');
     bar.classList.toggle('on', S.driveMode);
-    document.getElementById('drive-bar-sub').textContent = S.driveMode
-      ? 'ON — tap mic, speak, auto-saves when you stop'
-      : 'Tap mic, speak — auto-saves when you stop';
+
+    if (S.driveMode) {
+      // Notes requires manual share sheet interaction — incompatible with Drive Mode
+      if (S.destinations.notes) {
+        S.destinations.notes = false;
+        applyDestToggles();
+        toast('Apple Notes disabled — requires a tap. Use Device or Sheets in Drive Mode.', 'info');
+      }
+      document.getElementById('drive-bar-sub').textContent = 'ON — tap mic, speak, auto-saves when you stop';
+      // Visually dim the Notes toggle so it's clear why
+      const notesToggle = document.querySelector('.dest-toggle[data-dest="notes"]');
+      if (notesToggle) { notesToggle.style.opacity = '0.4'; notesToggle.style.pointerEvents = 'none'; }
+    } else {
+      document.getElementById('drive-bar-sub').textContent = 'Tap mic, speak — auto-saves when you stop';
+      const notesToggle = document.querySelector('.dest-toggle[data-dest="notes"]');
+      if (notesToggle) { notesToggle.style.opacity = ''; notesToggle.style.pointerEvents = ''; }
+    }
   }
 
   function updateMicUI(listening) {

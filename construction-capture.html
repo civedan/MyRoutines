@@ -1385,17 +1385,22 @@ const App = (() => {
   async function testSheet(type) {
     const url = type === 'team' ? S.settings.teamSheetUrl : S.settings.mySheetUrl;
     if (!url) { toast('Enter the Web App URL first', 'error'); return; }
-    toast('Testing connection…', 'info');
+    toast('Testing…', 'info');
     try {
-      // GET hits doGet() — readable response that confirms deployment is live
       const r = await fetch(url, { method: 'GET' });
       const text = await r.text();
       if (text.includes('Site Scout')) {
         toast('✓ Connected — sheet is ready', 'success');
       } else {
-        toast('Responded but unexpected reply — check deployment settings', 'info');
+        toast('Unexpected response — check deployment settings', 'info');
       }
-    } catch (e) { toast('Failed: ' + e.message, 'error'); }
+    } catch {
+      // Apps Script URLs often block programmatic fetches due to a CORS redirect.
+      // Open directly in the browser — if the script deployed correctly you'll
+      // see "Site Scout sheet is connected and ready."
+      window.open(url, '_blank');
+      toast('Opening in browser — look for "Site Scout sheet is connected"', 'info');
+    }
   }
 
   function showSheetsScript(type) {

@@ -451,6 +451,34 @@
     .ob-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--surface3); transition: background 0.2s; }
     .ob-dot.active { background: var(--orange); }
 
+    /* ─── Drive mode bar ──────────────────────────────────────── */
+    #drive-bar {
+      display: flex; align-items: center; justify-content: space-between;
+      background: var(--surface2); border: 1px solid var(--border2);
+      border-radius: 50px; padding: 8px 8px 8px 16px; margin-bottom: 12px;
+      transition: all 0.2s;
+    }
+    #drive-bar.on {
+      background: rgba(249,115,22,0.12);
+      border-color: rgba(249,115,22,0.4);
+    }
+    #drive-bar-label { font-size: 13px; font-weight: 700; color: var(--text-dim); transition: color 0.2s; }
+    #drive-bar.on #drive-bar-label { color: var(--orange); }
+    #drive-bar-sub { font-size: 11px; color: var(--text-muted); margin-top: 1px; }
+    #drive-bar.on #drive-bar-sub { color: rgba(249,115,22,0.7); }
+    .drive-switch {
+      width: 48px; height: 28px; border-radius: 14px; border: none;
+      background: var(--surface3); cursor: pointer; position: relative;
+      transition: background 0.2s; flex-shrink: 0;
+    }
+    .drive-switch::after {
+      content: ''; position: absolute; top: 3px; left: 3px;
+      width: 22px; height: 22px; border-radius: 50%; background: white;
+      transition: transform 0.2s; box-shadow: 0 1px 4px rgba(0,0,0,0.3);
+    }
+    #drive-bar.on .drive-switch { background: var(--orange); }
+    #drive-bar.on .drive-switch::after { transform: translateX(20px); }
+
     /* ─── Speech warning ───────────────────────────────────────── */
     .speech-warning {
       display: flex; align-items: flex-start; gap: 10px;
@@ -562,6 +590,14 @@
 
     <!-- ── Capture ───────────────────────────────────────────── -->
     <div class="screen active" id="screen-capture">
+
+      <div id="drive-bar" onclick="App.toggleDriveMode()">
+        <div>
+          <div id="drive-bar-label">🚗 Drive Mode</div>
+          <div id="drive-bar-sub">Tap mic, speak — auto-saves when you stop</div>
+        </div>
+        <button class="drive-switch" id="drive-switch" onclick="event.stopPropagation();App.toggleDriveMode()"></button>
+      </div>
 
       <div id="gps-pill" class="acquiring">
         <span class="gps-icon">⟳</span>
@@ -871,6 +907,8 @@ const App = (() => {
     recording: false,
     transcript: '',
     recognition: null,
+    SRClass: null,
+    driveMode: false,
     destinations: { local: true, monday: false, 'my-sheet': false, 'team-sheet': false, notes: true },
     settings: {},
     profile: {},
@@ -1085,55 +1123,104 @@ const App = (() => {
   function setupSpeech() {
     const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SR) { document.getElementById('speech-warning').style.display = 'flex'; return; }
-    const r = new SR();
-    r.continuous = false; r.interimResults = true; r.lang = 'en-CA';
+    S.SRClass = SR;
+  }
+
+  function buildRecognizer() {
+    const r = new S.SRClass();
+    r.continuous = false;
+    r.interimResults = true;
+    r.lang = 'en-CA';
+
     r.onresult = (e) => {
       let interim = '', final = '';
       for (let i = e.resultIndex; i < e.results.length; i++) {
         if (e.results[i].isFinal) final += e.results[i][0].transcript;
         else interim += e.results[i][0].transcript;
       }
+      // Always save the best available text — iOS rarely fires isFinal
       const text = (final || interim).trim();
-      const vsEl = document.getElementById('voice-status');
-      vsEl.className = 'active';
-      vsEl.textContent = text || 'Listening…';
-      if (final) S.transcript = final.trim();
+      if (text) S.transcript = text;
+      const vs = document.getElementById('voice-status');
+      vs.className = 'active';
+      vs.textContent = text || 'Listening…';
     };
-    r.onend = () => { if (S.recording) stopRecording(); };
+
+    // onend is the single place we fill the form — fires whether the user
+    // tapped stop or recognition ended naturally after a pause
+    r.onend = () => {
+      S.recording = false;
+      updateMicUI(false);
+      if (S.transcript) {
+        applyTranscript();
+        if (S.driveMode) {
+          // Small delay so user can see the transcript before save toast appears
+          setTimeout(() => saveCapture(), 600);
+        }
+      } else {
+        const vs = document.getElementById('voice-status');
+        vs.className = '';
+        vs.textContent = 'Tap to start recording';
+      }
+    };
+
     r.onerror = (e) => {
-      if (e.error !== 'aborted') toast('Mic error: ' + e.error, 'error');
-      S.recording = false; updateMicUI(false);
+      if (e.error !== 'aborted' && e.error !== 'no-speech') {
+        toast('Mic error: ' + e.error, 'error');
+      }
+      S.recording = false;
+      updateMicUI(false);
+      const vs = document.getElementById('voice-status');
+      vs.className = '';
+      vs.textContent = 'Tap to start recording';
     };
-    S.recognition = r;
+
+    return r;
+  }
+
+  function applyTranscript() {
+    const vs = document.getElementById('voice-status');
+    vs.className = 'done';
+    vs.textContent = '✓ ' + S.transcript;
+    const nameEl = document.getElementById('site-name');
+    if (!nameEl.value.trim()) {
+      nameEl.value = capFirst(S.transcript);
+    } else {
+      const notesEl = document.getElementById('site-notes');
+      notesEl.value = (notesEl.value ? notesEl.value + '\n' : '') + S.transcript;
+    }
   }
 
   function toggleRecording() { S.recording ? stopRecording() : startRecording(); }
 
   function startRecording() {
-    if (!S.recognition) { toast('Voice requires Safari on iOS', 'error'); return; }
-    S.recording = true; S.transcript = '';
+    if (!S.SRClass) { toast('Voice requires Safari on iOS', 'error'); return; }
+    // Build a fresh recognizer every time — reusing the same instance
+    // causes silent failures on iOS after the first session
+    S.recognition = buildRecognizer();
+    S.recording = true;
+    S.transcript = '';
     updateMicUI(true);
     const vs = document.getElementById('voice-status');
-    vs.className = 'active'; vs.textContent = 'Listening… (tap to stop)';
+    vs.className = 'active';
+    vs.textContent = S.driveMode ? 'Listening… speak now' : 'Listening… (tap to stop)';
     try { S.recognition.start(); } catch {}
   }
 
   function stopRecording() {
-    S.recording = false; updateMicUI(false);
-    try { S.recognition.stop(); } catch {}
-    const vs = document.getElementById('voice-status');
-    if (S.transcript) {
-      vs.className = 'done';
-      vs.textContent = '✓ ' + S.transcript;
-      const nameEl = document.getElementById('site-name');
-      if (!nameEl.value.trim()) nameEl.value = capFirst(S.transcript);
-      else {
-        const notesEl = document.getElementById('site-notes');
-        notesEl.value = (notesEl.value ? notesEl.value + '\n' : '') + S.transcript;
-      }
-    } else {
-      vs.className = ''; vs.textContent = 'Tap to start recording';
-    }
+    // Just stop the recognizer — onend handles filling the form
+    S.recording = false;
+    updateMicUI(false);
+    if (S.recognition) { try { S.recognition.stop(); } catch {} }
+  }
+
+  function toggleDriveMode() {
+    S.driveMode = !S.driveMode;
+    const bar = document.getElementById('drive-bar');
+    bar.classList.toggle('on', S.driveMode);
+    document.getElementById('drive-bar-sub').textContent = S.driveMode
+      ? 'ON — tap mic, speak, auto-saves when you stop'
+      : 'Tap mic, speak — auto-saves when you stop';
   }
 
   function updateMicUI(listening) {
@@ -1485,7 +1572,7 @@ const App = (() => {
 
   return {
     init, showTab, toggleDest, applyDestToggles,
-    toggleRecording, saveCapture,
+    toggleRecording, toggleDriveMode, saveCapture,
     refreshLocation, refreshProfileUI, refreshDestUI,
     saveSetting, testMonday, testSheet, showSheetsScript,
     renderHistory, showDetail, reshare, getCapture,

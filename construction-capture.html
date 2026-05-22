@@ -1369,17 +1369,21 @@ const App = (() => {
   // ── Google Sheets ─────────────────────────────────────────────
   async function saveToSheet(url, c) {
     if (!url) throw new Error('Sheet URL not configured');
-    await fetch(url, {
-      method: 'POST', mode: 'no-cors',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        capturedBy: c.capturedBy, company: c.company,
-        siteName: c.siteName, notes: c.notes,
-        lat: c.lat, lng: c.lng, address: c.address,
-        date: c.dateStr, timestamp: c.timestamp,
-        mapsUrl: c.lat ? `https://maps.google.com/?q=${c.lat},${c.lng}` : '',
-      }),
+    // Use GET with URL params — POST bodies are stripped when Apps Script
+    // redirects to script.googleusercontent.com, GET params survive the redirect
+    const params = new URLSearchParams({
+      capturedBy: c.capturedBy || '',
+      company:    c.company    || '',
+      siteName:   c.siteName   || '',
+      notes:      c.notes      || '',
+      lat:        c.lat  != null ? c.lat  : '',
+      lng:        c.lng  != null ? c.lng  : '',
+      address:    c.address    || '',
+      date:       c.dateStr    || '',
+      timestamp:  c.timestamp  || '',
+      mapsUrl:    c.lat ? `https://maps.google.com/?q=${c.lat},${c.lng}` : '',
     });
+    await fetch(`${url}?${params.toString()}`, { method: 'GET', mode: 'no-cors' });
   }
 
   async function testSheet(type) {
@@ -1407,7 +1411,7 @@ const App = (() => {
     const isTeam = type === 'team';
     const script = `function doPost(e) {
   try {
-    var data = JSON.parse(e.postData.contents);
+    var p = e.parameter;
     var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
 
     if (sheet.getLastRow() === 0) {
@@ -1419,16 +1423,16 @@ const App = (() => {
     }
 
     sheet.appendRow([
-      data.capturedBy || '',
-      data.company    || '',
-      data.siteName   || '',
-      data.notes      || '',
-      data.lat        || '',
-      data.lng        || '',
-      data.address    || '',
-      data.date       || '',
-      data.timestamp  || '',
-      data.mapsUrl    || ''
+      p.capturedBy || '',
+      p.company    || '',
+      p.siteName   || '',
+      p.notes      || '',
+      p.lat        || '',
+      p.lng        || '',
+      p.address    || '',
+      p.date       || '',
+      p.timestamp  || '',
+      p.mapsUrl    || ''
     ]);
 
     return ContentService
@@ -1442,11 +1446,15 @@ const App = (() => {
   }
 }
 
-// Open the web app URL in a browser to confirm it deployed correctly
-function doGet() {
-  return ContentService
-    .createTextOutput('Site Scout sheet is connected and ready.')
-    .setMimeType(ContentService.MimeType.TEXT);
+function doGet(e) {
+  // No parameters = test connection ping
+  if (!e || !e.parameter || !e.parameter.siteName) {
+    return ContentService
+      .createTextOutput('Site Scout sheet is connected and ready.')
+      .setMimeType(ContentService.MimeType.TEXT);
+  }
+  // Parameters present = data submission (same logic as doPost)
+  return doPost(e);
 }`;
     const steps = isTeam
       ? `<div class="info-box" style="margin-bottom:14px"><span class="info-icon">🌐</span><span><strong>One person</strong> on your team sets this up, then shares the URL with everyone else. All team members enter the same URL in "Team Sheet" settings.</span></div>`
@@ -1455,13 +1463,13 @@ function doGet() {
       ${steps}
       <div class="info-box warning" style="margin-bottom:12px">
         <span class="info-icon">⚠️</span>
-        <span><strong>Don't click "Run" in the editor</strong> — it will always error because the Run button doesn't send any POST data. The script only works when called over HTTP after deploying.</span>
+        <span>If you already have a deployment, you need to <strong>update it</strong> with the new code: Deploy → Manage deployments → pencil icon → Version: New version → Deploy. Your URL stays the same.</span>
       </div>
       <ol style="font-size:13px;color:var(--text-dim);line-height:2;padding-left:18px;margin-bottom:14px">
         <li>Open your Google Sheet → Extensions → Apps Script</li>
         <li>Replace all existing code with the template below</li>
-        <li>Click Deploy → New deployment → Web app → Execute as: <strong>Me</strong> → Who has access: <strong>Anyone</strong></li>
-        <li>Copy the Web App URL and paste it in Settings, then tap "Test Connection"</li>
+        <li>Deploy → Manage deployments → pencil → <strong>New version</strong> → Deploy (URL stays the same)</li>
+        <li>Tap "Test Connection" in Site Scout — should say "Connected and ready"</li>
       </ol>
       <pre>${script}</pre>
     `);

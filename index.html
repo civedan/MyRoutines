@@ -240,6 +240,14 @@
   .pomodoro-card .card-title { color: #ffd0d0; }
   .pomodoro-card::before { background: #f87171; }
 
+  .routine-card.scout-card {
+    background: linear-gradient(135deg, #0a1118 0%, #081018 100%);
+    border-color: #3b82f630;
+  }
+  .scout-card .card-icon { color: #3b82f6; }
+  .scout-card .card-title { color: #bfdbfe; }
+  .scout-card::before { background: #3b82f6; }
+
   @keyframes pulse {
     0%, 100% { opacity: 1; }
     50% { opacity: 0.5; }
@@ -341,6 +349,16 @@
         <div class="card-label">Day Planning</div>
         <div class="card-title">Time<br>Blocker</div>
         <div class="card-meta">Schedule your day</div>
+      </div>
+    </a>
+
+    <!-- Site Scout Card -->
+    <a class="routine-card scout-card" href="construction-capture.html">
+      <div class="card-icon">📍</div>
+      <div class="card-body">
+        <div class="card-label">Field Capture</div>
+        <div class="card-title">Site<br>Scout</div>
+        <div class="card-meta">Log construction sites on the go</div>
       </div>
     </a>
 

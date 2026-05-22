@@ -6,51 +6,80 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="Site Scout">
-  <meta name="theme-color" content="#0a0f1e">
+  <meta name="theme-color" content="#0B0F1A">
   <title>Site Scout</title>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
-      --bg: #0a0f1e;
-      --surface: #141c2e;
-      --surface2: #1e2a40;
-      --border: #2a3a54;
-      --accent: #3b82f6;
-      --accent-dim: #1d4ed8;
-      --green: #22c55e;
-      --orange: #f59e0b;
-      --red: #ef4444;
-      --text: #f0f4ff;
-      --text-dim: #8899bb;
-      --radius: 16px;
-      --tab-h: 70px;
-      --safe-b: env(safe-area-inset-bottom, 0px);
+      --bg:          #0B0F1A;
+      --bg2:         #0F1525;
+      --surface:     #141C2E;
+      --surface2:    #1C2539;
+      --surface3:    #232E46;
+      --border:      rgba(255,255,255,0.07);
+      --border2:     rgba(255,255,255,0.12);
+      --orange:      #F97316;
+      --orange-lt:   #FB923C;
+      --orange-glow: rgba(249,115,22,0.25);
+      --amber:       #FBBF24;
+      --blue:        #3B82F6;
+      --green:       #10B981;
+      --red:         #EF4444;
+      --purple:      #8B5CF6;
+      --teal:        #14B8A6;
+      --text:        #F0F4FF;
+      --text-dim:    #7B8FBB;
+      --text-muted:  #4A5A7A;
+      --radius:      18px;
+      --radius-sm:   12px;
+      --tab-h:       72px;
+      --safe-t:      env(safe-area-inset-top, 0px);
+      --safe-b:      env(safe-area-inset-bottom, 0px);
     }
 
     html, body {
       height: 100%; background: var(--bg); color: var(--text);
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', sans-serif;
       -webkit-font-smoothing: antialiased; overflow: hidden;
     }
 
-    /* ── Layout ─────────────────────────────────────────────── */
+    /* ─── App shell ────────────────────────────────────────────── */
     #app { display: flex; flex-direction: column; height: 100vh; height: 100dvh; }
 
+    /* ─── Header ───────────────────────────────────────────────── */
     #header {
-      background: var(--surface); border-bottom: 1px solid var(--border);
-      padding: 14px 20px calc(14px + env(safe-area-inset-top, 0px));
-      padding-top: calc(14px + env(safe-area-inset-top, 0px));
-      display: flex; align-items: center; justify-content: space-between;
       flex-shrink: 0;
+      padding: calc(var(--safe-t) + 12px) 20px 12px;
+      background: linear-gradient(180deg, rgba(249,115,22,0.08) 0%, transparent 100%);
+      border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between; gap: 12px;
     }
-    #header h1 { font-size: 20px; font-weight: 700; letter-spacing: -0.3px; }
-    #header h1 span { color: var(--accent); }
-    .capture-count {
-      background: var(--surface2); border: 1px solid var(--border);
-      border-radius: 20px; padding: 4px 12px; font-size: 12px; color: var(--text-dim);
+    .header-left { display: flex; align-items: center; gap: 10px; }
+    .app-logo {
+      width: 36px; height: 36px; border-radius: 10px; flex-shrink: 0;
+      background: linear-gradient(135deg, var(--orange), var(--orange-lt));
+      display: flex; align-items: center; justify-content: center; font-size: 18px;
+      box-shadow: 0 4px 14px var(--orange-glow);
     }
+    #header h1 { font-size: 20px; font-weight: 800; letter-spacing: -0.5px; }
+    #header h1 span { background: linear-gradient(90deg, var(--orange), var(--amber)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+    .user-chip {
+      display: flex; align-items: center; gap: 7px;
+      background: var(--surface2); border: 1px solid var(--border2);
+      border-radius: 50px; padding: 5px 12px 5px 6px; cursor: pointer;
+      transition: background 0.15s;
+    }
+    .user-chip:active { background: var(--surface3); }
+    .user-avatar {
+      width: 26px; height: 26px; border-radius: 50%;
+      background: linear-gradient(135deg, var(--orange), var(--amber));
+      display: flex; align-items: center; justify-content: center;
+      font-size: 12px; font-weight: 800; color: white; flex-shrink: 0;
+    }
+    .user-name { font-size: 13px; font-weight: 600; max-width: 100px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
+    /* ─── Screens ──────────────────────────────────────────────── */
     #screens { flex: 1; overflow: hidden; position: relative; }
     .screen {
       position: absolute; inset: 0; overflow-y: auto; padding: 16px 16px 24px;
@@ -58,294 +87,588 @@
     }
     .screen.active { display: block; }
 
+    /* ─── Tab bar ──────────────────────────────────────────────── */
     #tabbar {
-      background: var(--surface); border-top: 1px solid var(--border);
-      display: flex; padding-bottom: var(--safe-b); flex-shrink: 0;
+      flex-shrink: 0; background: var(--surface);
+      border-top: 1px solid var(--border);
+      display: flex; padding-bottom: var(--safe-b);
     }
     .tab-btn {
       flex: 1; display: flex; flex-direction: column; align-items: center;
       justify-content: center; gap: 4px; height: var(--tab-h);
-      background: none; border: none; color: var(--text-dim); font-size: 10px;
-      font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;
-      cursor: pointer; transition: color 0.15s;
+      background: none; border: none; color: var(--text-muted); font-size: 10px;
+      font-weight: 700; text-transform: uppercase; letter-spacing: 0.6px;
+      cursor: pointer; transition: color 0.15s; position: relative;
     }
-    .tab-btn svg { width: 22px; height: 22px; stroke: currentColor; fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
-    .tab-btn.active { color: var(--accent); }
+    .tab-btn svg { width: 22px; height: 22px; stroke: currentColor; fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; transition: stroke 0.15s; }
+    .tab-btn.active { color: var(--orange); }
+    .tab-btn.active::before {
+      content: ''; position: absolute; top: 0; left: 50%; transform: translateX(-50%);
+      width: 40px; height: 2px; background: var(--orange); border-radius: 0 0 3px 3px;
+    }
+    .tab-badge {
+      position: absolute; top: 10px; right: calc(50% - 22px);
+      background: var(--orange); color: white; font-size: 9px; font-weight: 800;
+      width: 16px; height: 16px; border-radius: 50%; display: flex;
+      align-items: center; justify-content: center;
+    }
 
-    /* ── Cards ──────────────────────────────────────────────── */
+    /* ─── Cards ────────────────────────────────────────────────── */
     .card {
       background: var(--surface); border: 1px solid var(--border);
       border-radius: var(--radius); padding: 16px; margin-bottom: 12px;
     }
+    .card-accent {
+      background: linear-gradient(135deg, rgba(249,115,22,0.06), rgba(251,146,60,0.02));
+      border-color: rgba(249,115,22,0.2);
+    }
+    .card-header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 14px;
+    }
     .card-label {
-      font-size: 11px; font-weight: 700; text-transform: uppercase;
-      letter-spacing: 0.8px; color: var(--text-dim); margin-bottom: 10px;
+      font-size: 11px; font-weight: 800; text-transform: uppercase;
+      letter-spacing: 0.9px; color: var(--text-dim);
+      display: flex; align-items: center; gap: 6px;
+    }
+    .card-label .dot {
+      width: 6px; height: 6px; border-radius: 50%; background: var(--orange);
     }
 
-    /* ── GPS Pill ────────────────────────────────────────────── */
+    /* ─── GPS pill ─────────────────────────────────────────────── */
     #gps-pill {
-      display: flex; align-items: center; gap: 8px; padding: 10px 14px;
-      border-radius: 50px; font-size: 13px; font-weight: 600;
-      margin-bottom: 14px; border: 1px solid;
-      transition: all 0.3s;
+      display: flex; align-items: center; gap: 10px; padding: 12px 16px;
+      border-radius: 50px; margin-bottom: 14px; border: 1px solid;
+      transition: all 0.4s; position: relative; overflow: hidden;
     }
-    #gps-pill.acquiring { background: rgba(245,158,11,0.1); border-color: var(--orange); color: var(--orange); }
-    #gps-pill.ready     { background: rgba(34,197,94,0.1);  border-color: var(--green);  color: var(--green); }
-    #gps-pill.error     { background: rgba(239,68,68,0.1);  border-color: var(--red);    color: var(--red); }
-    #gps-pill .dot { width: 8px; height: 8px; border-radius: 50%; background: currentColor; flex-shrink: 0; }
-    #gps-pill.acquiring .dot { animation: pulse 1.2s ease-in-out infinite; }
-    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
-    #gps-pill .address { flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    #gps-pill .coords { font-size: 10px; opacity: 0.7; flex-shrink: 0; }
+    #gps-pill::before {
+      content: ''; position: absolute; inset: 0;
+      background: currentColor; opacity: 0.07; pointer-events: none;
+    }
+    #gps-pill.acquiring { border-color: rgba(251,191,36,0.4); color: var(--amber); }
+    #gps-pill.ready     { border-color: rgba(16,185,129,0.4); color: var(--green); }
+    #gps-pill.error     { border-color: rgba(239,68,68,0.4);  color: var(--red); }
+    .gps-icon { font-size: 15px; flex-shrink: 0; }
+    #gps-pill.acquiring .gps-icon { animation: spinGps 2s linear infinite; }
+    @keyframes spinGps { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+    .gps-address { flex: 1; font-size: 13px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .gps-coords { font-size: 10px; opacity: 0.65; flex-shrink: 0; font-variant-numeric: tabular-nums; }
 
-    /* ── Voice Button ────────────────────────────────────────── */
+    /* ─── Voice area ───────────────────────────────────────────── */
     #voice-area {
       display: flex; flex-direction: column; align-items: center;
-      padding: 24px 16px; margin-bottom: 12px;
+      padding: 20px 16px 16px;
     }
     #mic-btn {
-      width: 130px; height: 130px; border-radius: 50%; border: none;
-      background: var(--surface2); cursor: pointer; display: flex;
-      align-items: center; justify-content: center;
-      box-shadow: 0 0 0 0 rgba(59,130,246,0);
-      transition: background 0.2s, box-shadow 0.2s;
-      position: relative;
+      width: 120px; height: 120px; border-radius: 50%; border: none;
+      background: var(--surface2); cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      position: relative; transition: all 0.25s;
+      box-shadow: 0 0 0 0 var(--orange-glow);
     }
-    #mic-btn svg { width: 52px; height: 52px; stroke: var(--text-dim); fill: none; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; transition: stroke 0.2s; }
+    #mic-btn::before {
+      content: ''; position: absolute; inset: -6px; border-radius: 50%;
+      border: 2px solid var(--border2); transition: border-color 0.25s;
+    }
+    #mic-btn svg { width: 46px; height: 46px; stroke: var(--text-dim); fill: none; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; transition: stroke 0.2s; }
     #mic-btn.listening {
-      background: rgba(239,68,68,0.15);
-      animation: ring 1.5s ease-out infinite;
-      box-shadow: 0 0 0 0 rgba(239,68,68,0.4);
+      background: rgba(239,68,68,0.12);
+      box-shadow: 0 0 0 18px rgba(239,68,68,0.08), 0 0 0 36px rgba(239,68,68,0.04);
+      animation: micPulse 1.5s ease-in-out infinite;
     }
+    #mic-btn.listening::before { border-color: rgba(239,68,68,0.4); }
     #mic-btn.listening svg { stroke: var(--red); }
-    @keyframes ring { 0%{box-shadow:0 0 0 0 rgba(239,68,68,0.4)} 70%{box-shadow:0 0 0 30px rgba(239,68,68,0)} 100%{box-shadow:0 0 0 0 rgba(239,68,68,0)} }
-    #voice-status {
-      margin-top: 14px; font-size: 14px; color: var(--text-dim);
-      font-weight: 500; text-align: center;
+    @keyframes micPulse {
+      0%, 100% { box-shadow: 0 0 0 10px rgba(239,68,68,0.1), 0 0 0 22px rgba(239,68,68,0.04); }
+      50%       { box-shadow: 0 0 0 20px rgba(239,68,68,0.06), 0 0 0 40px rgba(239,68,68,0.02); }
     }
+    #voice-status {
+      margin-top: 16px; font-size: 14px; color: var(--text-dim);
+      font-weight: 500; text-align: center; min-height: 20px;
+      transition: color 0.2s;
+    }
+    #voice-status.active { color: var(--red); font-weight: 600; }
+    #voice-status.done   { color: var(--green); }
 
-    /* ── Inputs ──────────────────────────────────────────────── */
+    /* ─── Form inputs ──────────────────────────────────────────── */
     .field-label {
-      font-size: 12px; font-weight: 700; text-transform: uppercase;
-      letter-spacing: 0.6px; color: var(--text-dim); margin-bottom: 6px; display: block;
+      font-size: 11px; font-weight: 800; text-transform: uppercase;
+      letter-spacing: 0.7px; color: var(--text-dim); margin-bottom: 8px; display: block;
     }
     input[type="text"], input[type="password"], input[type="number"], textarea, select {
-      width: 100%; background: var(--surface2); border: 1px solid var(--border);
-      border-radius: 10px; padding: 12px 14px; color: var(--text); font-size: 15px;
-      font-family: inherit; outline: none; transition: border-color 0.15s;
+      width: 100%; background: var(--surface2); border: 1px solid var(--border2);
+      border-radius: var(--radius-sm); padding: 13px 16px; color: var(--text);
+      font-size: 15px; font-family: inherit; outline: none; transition: border-color 0.15s, box-shadow 0.15s;
+      -webkit-appearance: none;
     }
-    input:focus, textarea:focus, select:focus { border-color: var(--accent); }
-    textarea { resize: vertical; min-height: 70px; }
+    input:focus, textarea:focus, select:focus {
+      border-color: rgba(249,115,22,0.5);
+      box-shadow: 0 0 0 3px rgba(249,115,22,0.1);
+    }
+    textarea { resize: none; min-height: 72px; }
     .field-group { margin-bottom: 14px; }
 
-    /* ── Destination Toggles ─────────────────────────────────── */
+    /* ─── Destination toggles ──────────────────────────────────── */
     .dest-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
     .dest-toggle {
-      display: flex; flex-direction: column; align-items: center; gap: 6px;
-      padding: 12px 8px; border-radius: 12px; border: 2px solid var(--border);
-      background: var(--surface2); cursor: pointer; transition: all 0.15s;
-      user-select: none; -webkit-user-select: none;
+      display: flex; align-items: center; gap: 10px;
+      padding: 13px 14px; border-radius: var(--radius-sm);
+      border: 1px solid var(--border2); background: var(--surface2);
+      cursor: pointer; transition: all 0.15s; user-select: none;
+      -webkit-user-select: none; position: relative;
     }
-    .dest-toggle.on { border-color: var(--accent); background: rgba(59,130,246,0.1); }
-    .dest-toggle svg { width: 24px; height: 24px; stroke: var(--text-dim); fill: none; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
-    .dest-toggle.on svg { stroke: var(--accent); }
-    .dest-toggle span { font-size: 11px; font-weight: 700; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.5px; }
-    .dest-toggle.on span { color: var(--accent); }
+    .dest-toggle .dest-icon {
+      width: 32px; height: 32px; border-radius: 8px; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center; font-size: 16px;
+      background: var(--surface3); transition: background 0.15s;
+    }
+    .dest-toggle .dest-info { flex: 1; min-width: 0; }
+    .dest-toggle .dest-name { font-size: 13px; font-weight: 700; display: block; }
+    .dest-toggle .dest-hint { font-size: 10px; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .dest-toggle .dest-check {
+      width: 18px; height: 18px; border-radius: 50%; border: 2px solid var(--border2);
+      flex-shrink: 0; display: flex; align-items: center; justify-content: center;
+      transition: all 0.15s; font-size: 10px;
+    }
+    /* device */
+    .dest-toggle[data-dest="local"].on { border-color: rgba(59,130,246,0.4); background: rgba(59,130,246,0.08); }
+    .dest-toggle[data-dest="local"].on .dest-icon { background: rgba(59,130,246,0.15); }
+    .dest-toggle[data-dest="local"].on .dest-check { background: var(--blue); border-color: var(--blue); color: white; }
+    /* monday */
+    .dest-toggle[data-dest="monday"].on { border-color: rgba(139,92,246,0.4); background: rgba(139,92,246,0.08); }
+    .dest-toggle[data-dest="monday"].on .dest-icon { background: rgba(139,92,246,0.15); }
+    .dest-toggle[data-dest="monday"].on .dest-check { background: var(--purple); border-color: var(--purple); color: white; }
+    /* my-sheet */
+    .dest-toggle[data-dest="my-sheet"].on { border-color: rgba(16,185,129,0.4); background: rgba(16,185,129,0.08); }
+    .dest-toggle[data-dest="my-sheet"].on .dest-icon { background: rgba(16,185,129,0.15); }
+    .dest-toggle[data-dest="my-sheet"].on .dest-check { background: var(--green); border-color: var(--green); color: white; }
+    /* team-sheet */
+    .dest-toggle[data-dest="team-sheet"].on { border-color: rgba(20,184,166,0.4); background: rgba(20,184,166,0.08); }
+    .dest-toggle[data-dest="team-sheet"].on .dest-icon { background: rgba(20,184,166,0.15); }
+    .dest-toggle[data-dest="team-sheet"].on .dest-check { background: var(--teal); border-color: var(--teal); color: white; }
+    /* notes */
+    .dest-toggle[data-dest="notes"].on { border-color: rgba(251,191,36,0.4); background: rgba(251,191,36,0.08); }
+    .dest-toggle[data-dest="notes"].on .dest-icon { background: rgba(251,191,36,0.15); }
+    .dest-toggle[data-dest="notes"].on .dest-check { background: var(--amber); border-color: var(--amber); color: white; }
+    /* needs setup badge */
+    .dest-toggle .setup-badge {
+      position: absolute; top: 6px; right: 6px;
+      font-size: 8px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.4px;
+      background: rgba(251,191,36,0.15); color: var(--amber); border: 1px solid rgba(251,191,36,0.3);
+      border-radius: 4px; padding: 2px 5px;
+    }
 
-    /* ── Buttons ─────────────────────────────────────────────── */
+    /* ─── Buttons ──────────────────────────────────────────────── */
     .btn {
       display: flex; align-items: center; justify-content: center; gap: 8px;
       width: 100%; padding: 16px; border-radius: 14px; border: none;
       font-size: 16px; font-weight: 700; cursor: pointer; transition: all 0.15s;
+      font-family: inherit;
     }
-    .btn-primary { background: var(--accent); color: white; }
-    .btn-primary:hover { background: var(--accent-dim); }
-    .btn-primary:active { transform: scale(0.98); }
-    .btn-secondary { background: var(--surface2); color: var(--text); border: 1px solid var(--border); }
-    .btn-danger { background: rgba(239,68,68,0.1); color: var(--red); border: 1px solid var(--red); }
-    .btn-sm { padding: 10px 16px; font-size: 13px; border-radius: 10px; width: auto; }
-    .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+    .btn-primary {
+      background: linear-gradient(135deg, var(--orange), var(--orange-lt));
+      color: white; box-shadow: 0 6px 20px var(--orange-glow);
+    }
+    .btn-primary:active { transform: scale(0.98); box-shadow: 0 2px 8px var(--orange-glow); }
+    .btn-secondary { background: var(--surface2); color: var(--text); border: 1px solid var(--border2); }
+    .btn-secondary:active { background: var(--surface3); }
+    .btn-danger { background: rgba(239,68,68,0.1); color: var(--red); border: 1px solid rgba(239,68,68,0.3); }
+    .btn-sm { padding: 10px 18px; font-size: 13px; border-radius: 10px; width: auto; }
+    .btn-xs { padding: 7px 12px; font-size: 12px; border-radius: 8px; width: auto; }
+    .btn:disabled { opacity: 0.35; pointer-events: none; }
 
-    /* ── History ─────────────────────────────────────────────── */
-    .history-empty { text-align: center; padding: 60px 20px; color: var(--text-dim); }
-    .history-empty svg { width: 56px; height: 56px; stroke: var(--border); margin-bottom: 16px; fill: none; stroke-width: 1.4; stroke-linecap: round; stroke-linejoin: round; }
+    /* ─── History ──────────────────────────────────────────────── */
+    .history-toolbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
+    .history-count { font-size: 13px; color: var(--text-dim); font-weight: 600; }
+    .history-empty { text-align: center; padding: 60px 20px; }
+    .history-empty-icon { font-size: 48px; margin-bottom: 12px; }
+    .history-empty h3 { font-size: 18px; font-weight: 800; margin-bottom: 6px; }
+    .history-empty p { font-size: 14px; color: var(--text-dim); }
     .capture-card {
       background: var(--surface); border: 1px solid var(--border);
-      border-radius: var(--radius); padding: 14px; margin-bottom: 10px;
-      cursor: pointer; transition: border-color 0.15s;
+      border-radius: var(--radius); padding: 14px 16px; margin-bottom: 10px;
+      cursor: pointer; transition: border-color 0.15s, background 0.15s;
     }
-    .capture-card:hover { border-color: var(--accent); }
-    .capture-card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 6px; }
-    .capture-card-name { font-size: 15px; font-weight: 700; flex: 1; }
-    .capture-card-date { font-size: 11px; color: var(--text-dim); flex-shrink: 0; margin-left: 8px; }
-    .capture-card-address { font-size: 12px; color: var(--text-dim); margin-bottom: 6px; }
-    .capture-card-notes { font-size: 13px; color: var(--text); opacity: 0.8; margin-bottom: 10px; white-space: pre-wrap; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-    .capture-card-footer { display: flex; gap: 6px; flex-wrap: wrap; }
+    .capture-card:active { background: var(--surface2); border-color: var(--border2); }
+    .cc-row1 { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 4px; }
+    .cc-name { font-size: 15px; font-weight: 800; flex: 1; }
+    .cc-date { font-size: 11px; color: var(--text-dim); flex-shrink: 0; margin-left: 10px; }
+    .cc-author { font-size: 11px; color: var(--orange); font-weight: 700; margin-bottom: 3px; }
+    .cc-address { font-size: 12px; color: var(--text-dim); margin-bottom: 8px; display: flex; align-items: center; gap: 4px; }
+    .cc-notes { font-size: 13px; line-height: 1.4; color: var(--text); opacity: 0.75; margin-bottom: 10px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+    .cc-badges { display: flex; gap: 5px; flex-wrap: wrap; }
     .badge {
-      font-size: 10px; font-weight: 700; padding: 3px 8px; border-radius: 6px;
-      text-transform: uppercase; letter-spacing: 0.5px;
+      font-size: 10px; font-weight: 800; padding: 3px 8px; border-radius: 6px;
+      text-transform: uppercase; letter-spacing: 0.4px;
     }
-    .badge-monday { background: rgba(48,100,243,0.2); color: #6090ff; }
-    .badge-sheets  { background: rgba(34,197,94,0.2);  color: var(--green); }
-    .badge-notes   { background: rgba(245,158,11,0.2); color: var(--orange); }
-    .badge-csv     { background: rgba(139,92,246,0.2); color: #a78bfa; }
-    .badge-local   { background: var(--surface2); color: var(--text-dim); }
-    .capture-actions { display: flex; gap: 8px; margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--border); }
+    .b-local      { background: rgba(59,130,246,0.15);  color: #60A5FA; }
+    .b-monday     { background: rgba(139,92,246,0.15);  color: #A78BFA; }
+    .b-my-sheet   { background: rgba(16,185,129,0.15);  color: #34D399; }
+    .b-team-sheet { background: rgba(20,184,166,0.15);  color: #2DD4BF; }
+    .b-notes      { background: rgba(251,191,36,0.15);  color: var(--amber); }
 
-    /* ── Settings ────────────────────────────────────────────── */
-    .settings-section { margin-bottom: 8px; }
-    .settings-section summary {
-      font-size: 14px; font-weight: 700; color: var(--text);
-      padding: 14px 16px; background: var(--surface); border: 1px solid var(--border);
-      border-radius: var(--radius); cursor: pointer; list-style: none;
-      display: flex; justify-content: space-between; align-items: center;
-      user-select: none; -webkit-user-select: none;
+    /* ─── Settings ─────────────────────────────────────────────── */
+    .settings-group { margin-bottom: 6px; }
+    details.settings-panel { margin-bottom: 6px; }
+    details.settings-panel > summary {
+      display: flex; align-items: center; gap: 12px;
+      padding: 15px 16px; background: var(--surface);
+      border: 1px solid var(--border); border-radius: var(--radius);
+      cursor: pointer; list-style: none; user-select: none; -webkit-user-select: none;
+      font-size: 15px; font-weight: 700; transition: background 0.15s;
     }
-    .settings-section[open] summary { border-radius: var(--radius) var(--radius) 0 0; border-bottom-color: transparent; }
-    .settings-section summary::after { content: '▸'; color: var(--text-dim); transition: transform 0.2s; }
-    .settings-section[open] summary::after { transform: rotate(90deg); }
+    details.settings-panel[open] > summary { border-radius: var(--radius) var(--radius) 0 0; border-bottom-color: transparent; background: var(--surface2); }
+    details.settings-panel > summary:active { background: var(--surface2); }
+    .summary-icon { width: 34px; height: 34px; border-radius: 9px; display: flex; align-items: center; justify-content: center; font-size: 17px; flex-shrink: 0; }
+    .summary-text { flex: 1; }
+    .summary-title { font-size: 14px; font-weight: 700; }
+    .summary-sub { font-size: 11px; color: var(--text-dim); font-weight: 500; margin-top: 1px; }
+    .summary-chevron { color: var(--text-dim); font-size: 12px; transition: transform 0.2s; }
+    details.settings-panel[open] .summary-chevron { transform: rotate(90deg); }
     .settings-body {
       background: var(--surface); border: 1px solid var(--border);
       border-top: none; border-radius: 0 0 var(--radius) var(--radius); padding: 16px;
     }
-    .settings-hint { font-size: 12px; color: var(--text-dim); margin-bottom: 12px; line-height: 1.5; }
-    .settings-hint a { color: var(--accent); text-decoration: none; }
-    .test-row { display: flex; gap: 8px; align-items: center; }
-    .test-row input { flex: 1; }
-    .status-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--border); flex-shrink: 0; }
-    .status-dot.ok { background: var(--green); }
+    .settings-hint { font-size: 13px; color: var(--text-dim); margin-bottom: 14px; line-height: 1.6; }
+    .settings-hint a { color: var(--orange); text-decoration: none; }
+    .status-row { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-top: 1px solid var(--border); margin-top: 12px; }
+    .status-pill { display: flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; }
+    .status-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--border2); }
+    .status-dot.ok  { background: var(--green); }
     .status-dot.err { background: var(--red); }
+    .settings-section-label {
+      font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px;
+      color: var(--text-muted); padding: 14px 4px 8px; display: block;
+    }
+    .team-badge {
+      display: inline-flex; align-items: center; gap: 5px;
+      font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px;
+      background: rgba(20,184,166,0.15); color: var(--teal);
+      border: 1px solid rgba(20,184,166,0.3); border-radius: 6px; padding: 3px 8px; margin-bottom: 10px;
+    }
 
-    /* ── Toast ───────────────────────────────────────────────── */
+    /* ─── Profile section ──────────────────────────────────────── */
+    .profile-card {
+      background: linear-gradient(135deg, rgba(249,115,22,0.08), rgba(251,191,36,0.04));
+      border: 1px solid rgba(249,115,22,0.2); border-radius: var(--radius);
+      padding: 16px; margin-bottom: 12px; display: flex; align-items: center; gap: 14px;
+    }
+    .profile-avatar-lg {
+      width: 52px; height: 52px; border-radius: 50%;
+      background: linear-gradient(135deg, var(--orange), var(--amber));
+      display: flex; align-items: center; justify-content: center;
+      font-size: 22px; font-weight: 900; color: white; flex-shrink: 0;
+    }
+    .profile-info { flex: 1; min-width: 0; }
+    .profile-name { font-size: 18px; font-weight: 800; }
+    .profile-company { font-size: 13px; color: var(--text-dim); margin-top: 2px; }
+    .profile-stats { display: flex; gap: 6px; margin-top: 8px; }
+    .profile-stat { background: var(--surface3); border-radius: 8px; padding: 5px 10px; text-align: center; }
+    .profile-stat-val { font-size: 16px; font-weight: 800; color: var(--orange); }
+    .profile-stat-lbl { font-size: 10px; color: var(--text-dim); margin-top: 1px; }
+
+    /* ─── Info box ─────────────────────────────────────────────── */
+    .info-box {
+      display: flex; align-items: flex-start; gap: 10px;
+      background: var(--surface2); border: 1px solid var(--border2);
+      border-radius: var(--radius-sm); padding: 12px 14px; font-size: 13px; color: var(--text-dim); line-height: 1.5;
+    }
+    .info-box .info-icon { font-size: 16px; flex-shrink: 0; margin-top: 1px; }
+    .info-box.success { background: rgba(16,185,129,0.06); border-color: rgba(16,185,129,0.2); color: var(--green); }
+    .info-box.warning { background: rgba(251,191,36,0.06); border-color: rgba(251,191,36,0.2); color: var(--amber); }
+
+    /* ─── Toast ────────────────────────────────────────────────── */
     #toast {
-      position: fixed; bottom: calc(var(--tab-h) + var(--safe-b) + 12px); left: 50%; transform: translateX(-50%) translateY(20px);
-      background: var(--surface2); border: 1px solid var(--border); border-radius: 50px;
-      padding: 12px 20px; font-size: 14px; font-weight: 600; white-space: nowrap;
-      opacity: 0; transition: all 0.25s; pointer-events: none; z-index: 100;
-      max-width: calc(100vw - 32px); text-align: center;
+      position: fixed;
+      bottom: calc(var(--tab-h) + var(--safe-b) + 14px); left: 50%;
+      transform: translateX(-50%) translateY(16px);
+      background: var(--surface2); border: 1px solid var(--border2);
+      border-radius: 50px; padding: 12px 22px;
+      font-size: 14px; font-weight: 700; white-space: nowrap; max-width: calc(100vw - 32px);
+      opacity: 0; transition: all 0.22s ease; pointer-events: none; z-index: 900;
     }
     #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
-    #toast.success { border-color: var(--green); color: var(--green); }
-    #toast.error   { border-color: var(--red);   color: var(--red); }
-    #toast.info    { border-color: var(--accent); color: var(--accent); }
+    #toast.success { background: rgba(16,185,129,0.15); border-color: rgba(16,185,129,0.4); color: var(--green); }
+    #toast.error   { background: rgba(239,68,68,0.15);  border-color: rgba(239,68,68,0.4);  color: var(--red); }
+    #toast.info    { background: rgba(59,130,246,0.15); border-color: rgba(59,130,246,0.4); color: var(--blue); }
 
-    /* ── Modal ───────────────────────────────────────────────── */
+    /* ─── Modal ────────────────────────────────────────────────── */
     #modal-overlay {
-      position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 200;
+      position: fixed; inset: 0; background: rgba(0,0,0,0.65);
+      backdrop-filter: blur(4px); z-index: 800;
       display: none; align-items: flex-end; justify-content: center;
     }
     #modal-overlay.show { display: flex; }
     #modal {
       background: var(--surface); border-radius: var(--radius) var(--radius) 0 0;
-      width: 100%; max-height: 85vh; overflow-y: auto; padding: 20px;
-      padding-bottom: calc(20px + var(--safe-b));
+      border-top: 1px solid var(--border2);
+      width: 100%; max-height: 88vh; overflow-y: auto; padding: 20px;
+      padding-bottom: calc(20px + var(--safe-b)); position: relative;
     }
-    #modal h2 { font-size: 18px; font-weight: 700; margin-bottom: 4px; }
-    #modal .modal-sub { font-size: 13px; color: var(--text-dim); margin-bottom: 16px; }
-    .modal-map-link { display: flex; align-items: center; gap: 8px; padding: 12px 14px; background: var(--surface2); border: 1px solid var(--border); border-radius: 10px; margin-bottom: 14px; text-decoration: none; color: var(--accent); font-size: 13px; font-weight: 600; }
-    .modal-map-link svg { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
-    .detail-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid var(--border); font-size: 13px; }
+    .modal-handle { width: 36px; height: 4px; background: var(--surface3); border-radius: 2px; margin: 0 auto 18px; }
+    #modal h2 { font-size: 20px; font-weight: 800; margin-bottom: 4px; }
+    .modal-sub { font-size: 13px; color: var(--text-dim); margin-bottom: 18px; }
+    .modal-maps-link {
+      display: flex; align-items: center; gap: 10px; padding: 13px 16px;
+      background: rgba(249,115,22,0.08); border: 1px solid rgba(249,115,22,0.25);
+      border-radius: var(--radius-sm); text-decoration: none; color: var(--orange);
+      font-size: 13px; font-weight: 700; margin-bottom: 16px;
+    }
+    .detail-grid { display: flex; flex-direction: column; gap: 0; margin-bottom: 16px; }
+    .detail-row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid var(--border); font-size: 13px; }
     .detail-row:last-child { border-bottom: none; }
-    .detail-key { color: var(--text-dim); }
-    .detail-val { color: var(--text); text-align: right; max-width: 60%; }
+    .detail-key { color: var(--text-dim); font-weight: 600; }
+    .detail-val { color: var(--text); text-align: right; max-width: 62%; }
+    .action-row { display: flex; gap: 8px; }
 
-    /* ── Misc ────────────────────────────────────────────────── */
-    .row { display: flex; gap: 10px; }
+    /* ─── Onboarding ───────────────────────────────────────────── */
+    #onboarding {
+      position: fixed; inset: 0; z-index: 1000;
+      background: var(--bg);
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      padding: 32px 24px; padding-top: calc(32px + var(--safe-t));
+    }
+    #onboarding .ob-logo {
+      width: 80px; height: 80px; border-radius: 22px;
+      background: linear-gradient(135deg, var(--orange), var(--amber));
+      display: flex; align-items: center; justify-content: center; font-size: 40px;
+      box-shadow: 0 12px 40px var(--orange-glow); margin-bottom: 28px;
+    }
+    #onboarding h1 { font-size: 32px; font-weight: 900; text-align: center; letter-spacing: -0.5px; margin-bottom: 10px; }
+    #onboarding h1 span { background: linear-gradient(90deg, var(--orange), var(--amber)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+    #onboarding .ob-sub { font-size: 16px; color: var(--text-dim); text-align: center; line-height: 1.5; margin-bottom: 36px; max-width: 300px; }
+    #onboarding .ob-features { width: 100%; max-width: 320px; margin-bottom: 36px; }
+    .ob-feature { display: flex; align-items: center; gap: 14px; padding: 12px 0; border-bottom: 1px solid var(--border); }
+    .ob-feature:last-child { border-bottom: none; }
+    .ob-feature-icon { width: 38px; height: 38px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
+    .ob-feature-text { font-size: 14px; font-weight: 600; }
+    .ob-feature-sub { font-size: 12px; color: var(--text-dim); margin-top: 2px; }
+    #onboarding .ob-form { width: 100%; max-width: 320px; }
+    #onboarding .ob-form .field-group { margin-bottom: 12px; }
+    #onboarding .ob-step { display: none; }
+    #onboarding .ob-step.active { display: flex; flex-direction: column; align-items: center; width: 100%; }
+    .ob-progress { display: flex; gap: 6px; margin-bottom: 32px; }
+    .ob-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--surface3); transition: background 0.2s; }
+    .ob-dot.active { background: var(--orange); }
+
+    /* ─── Speech warning ───────────────────────────────────────── */
+    .speech-warning {
+      display: flex; align-items: flex-start; gap: 10px;
+      background: rgba(251,191,36,0.08); border: 1px solid rgba(251,191,36,0.25);
+      border-radius: var(--radius-sm); padding: 12px 14px; font-size: 13px; color: var(--amber);
+      line-height: 1.5; margin-bottom: 12px;
+    }
+
+    /* ─── Misc ─────────────────────────────────────────────────── */
+    .row { display: flex; gap: 8px; }
     .row > * { flex: 1; }
-    .mt-8 { margin-top: 8px; }
+    .mt-8  { margin-top: 8px; }
+    .mt-12 { margin-top: 12px; }
     .mt-16 { margin-top: 16px; }
-    .divider { border: none; border-top: 1px solid var(--border); margin: 16px 0; }
-    .speech-not-supported { background: rgba(245,158,11,0.1); border: 1px solid var(--orange); border-radius: 10px; padding: 12px; font-size: 13px; color: var(--orange); margin-bottom: 12px; }
+    .divider { border: none; border-top: 1px solid var(--border); margin: 14px 0; }
+    .text-center { text-align: center; }
+    pre { background: var(--surface2); padding: 14px; border-radius: var(--radius-sm); font-size: 11.5px; overflow-x: auto; white-space: pre-wrap; border: 1px solid var(--border2); line-height: 1.6; }
   </style>
 </head>
 <body>
 
-<div id="app">
+<!-- ── Onboarding ──────────────────────────────────────────────── -->
+<div id="onboarding" style="display:none">
 
-  <!-- Header -->
-  <div id="header">
-    <h1>Site <span>Scout</span></h1>
-    <div class="capture-count" id="capture-count">0 sites</div>
+  <div class="ob-progress">
+    <div class="ob-dot active" id="ob-dot-0"></div>
+    <div class="ob-dot" id="ob-dot-1"></div>
   </div>
 
-  <!-- Screens -->
+  <!-- Step 0: Welcome -->
+  <div class="ob-step active" id="ob-step-0">
+    <div class="ob-logo">📍</div>
+    <h1>Site <span>Scout</span></h1>
+    <p class="ob-sub">Capture construction site leads in seconds — GPS, voice notes, and instant sync to your tools.</p>
+    <div class="ob-features">
+      <div class="ob-feature">
+        <div class="ob-feature-icon" style="background:rgba(16,185,129,0.12)">🛰️</div>
+        <div>
+          <div class="ob-feature-text">GPS + address capture</div>
+          <div class="ob-feature-sub">Auto-resolves to street address</div>
+        </div>
+      </div>
+      <div class="ob-feature">
+        <div class="ob-feature-icon" style="background:rgba(239,68,68,0.12)">🎙️</div>
+        <div>
+          <div class="ob-feature-text">Voice annotation</div>
+          <div class="ob-feature-sub">Tap to record, auto-transcribed</div>
+        </div>
+      </div>
+      <div class="ob-feature">
+        <div class="ob-feature-icon" style="background:rgba(139,92,246,0.12)">☁️</div>
+        <div>
+          <div class="ob-feature-text">Sync anywhere</div>
+          <div class="ob-feature-sub">Monday.com, Google Sheets, Notes</div>
+        </div>
+      </div>
+    </div>
+    <div class="ob-form">
+      <button class="btn btn-primary" onclick="App.obNext()" style="border-radius:50px;font-size:17px">
+        Get started →
+      </button>
+    </div>
+  </div>
+
+  <!-- Step 1: Profile -->
+  <div class="ob-step" id="ob-step-1">
+    <div class="ob-logo" style="width:60px;height:60px;font-size:28px;border-radius:16px;margin-bottom:20px">👤</div>
+    <h1 style="font-size:26px;margin-bottom:8px">Your Profile</h1>
+    <p class="ob-sub" style="margin-bottom:24px">Your name is tagged to every capture — useful when sharing to a team spreadsheet.</p>
+    <div class="ob-form" style="max-width:320px;width:100%">
+      <div class="field-group">
+        <label class="field-label">Your Name *</label>
+        <input type="text" id="ob-name" placeholder="e.g. Dan Byrne" autocomplete="name" autocapitalize="words">
+      </div>
+      <div class="field-group">
+        <label class="field-label">Company (optional)</label>
+        <input type="text" id="ob-company" placeholder="e.g. Blue Anvil" autocapitalize="words">
+      </div>
+      <div class="info-box warning" style="margin-bottom:16px">
+        <span class="info-icon">💡</span>
+        <span>Your data stays on <strong>your device</strong>. Share this URL with teammates — everyone gets their own private captures.</span>
+      </div>
+      <button class="btn btn-primary" onclick="App.obFinish()" style="border-radius:50px;font-size:17px">
+        Start capturing →
+      </button>
+      <button class="btn btn-secondary mt-8" onclick="App.obSkip()" style="border-radius:50px;font-size:14px">
+        Skip for now
+      </button>
+    </div>
+  </div>
+
+</div>
+
+<!-- ── Main App ─────────────────────────────────────────────────── -->
+<div id="app">
+
+  <div id="header">
+    <div class="header-left">
+      <div class="app-logo">📍</div>
+      <h1>Site <span>Scout</span></h1>
+    </div>
+    <div class="user-chip" onclick="App.showTab('settings')">
+      <div class="user-avatar" id="hdr-avatar">?</div>
+      <div class="user-name" id="hdr-name">Setup</div>
+    </div>
+  </div>
+
   <div id="screens">
 
-    <!-- ── Capture ─────────────────────────────────────── -->
+    <!-- ── Capture ───────────────────────────────────────────── -->
     <div class="screen active" id="screen-capture">
 
       <div id="gps-pill" class="acquiring">
-        <div class="dot"></div>
-        <span class="address">Acquiring GPS…</span>
-        <span class="coords" id="gps-coords"></span>
+        <span class="gps-icon">⟳</span>
+        <span class="gps-address">Acquiring GPS…</span>
+        <span class="gps-coords" id="gps-coords"></span>
       </div>
 
-      <!-- Speech not supported warning -->
-      <div id="speech-warning" class="speech-not-supported" style="display:none">
-        Voice recognition not supported in this browser. Use Safari on iOS for full functionality.
+      <div id="speech-warning" class="speech-warning" style="display:none">
+        <span>⚠️</span>
+        <span>Voice recognition requires Safari on iOS or Chrome. You can still type site details manually.</span>
       </div>
 
-      <!-- Mic button -->
-      <div id="voice-area" class="card">
-        <div class="card-label">Voice Annotation</div>
-        <button id="mic-btn" onclick="App.toggleRecording()">
-          <svg viewBox="0 0 24 24">
-            <rect x="9" y="2" width="6" height="11" rx="3"/>
-            <path d="M5 10a7 7 0 0 0 14 0"/>
-            <line x1="12" y1="17" x2="12" y2="22"/>
-            <line x1="8" y1="22" x2="16" y2="22"/>
-          </svg>
-        </button>
-        <div id="voice-status">Tap to start recording</div>
+      <div class="card card-accent">
+        <div class="card-label"><span class="dot"></span>Voice Annotation</div>
+        <div id="voice-area">
+          <button id="mic-btn" onclick="App.toggleRecording()">
+            <svg id="mic-icon" viewBox="0 0 24 24">
+              <rect x="9" y="2" width="6" height="11" rx="3"/>
+              <path d="M5 10a7 7 0 0 0 14 0"/>
+              <line x1="12" y1="17" x2="12" y2="22"/>
+              <line x1="8" y1="22" x2="16" y2="22"/>
+            </svg>
+          </button>
+          <div id="voice-status">Tap to start recording</div>
+        </div>
       </div>
 
-      <!-- Site info -->
       <div class="card">
-        <div class="card-label">Site Details</div>
-        <div class="field-group">
-          <label class="field-label" for="site-name">Site Name / Description</label>
+        <div class="card-label"><span class="dot"></span>Site Details</div>
+        <div class="field-group mt-8">
+          <label class="field-label">Site Name / Description</label>
           <input type="text" id="site-name" placeholder="e.g. New condo build on King St" autocomplete="off">
         </div>
         <div class="field-group">
-          <label class="field-label" for="site-notes">Additional Notes</label>
-          <textarea id="site-notes" placeholder="Crew size, stage of construction, contact info…"></textarea>
+          <label class="field-label">Additional Notes</label>
+          <textarea id="site-notes" placeholder="Crew size, stage of construction, GC info, contact…"></textarea>
         </div>
       </div>
 
-      <!-- Save destinations -->
       <div class="card">
-        <div class="card-label">Save To</div>
+        <div class="card-header">
+          <div class="card-label"><span class="dot"></span>Save To</div>
+        </div>
         <div class="dest-grid" id="dest-grid">
-          <div class="dest-toggle" id="dest-local" onclick="App.toggleDest('local')">
-            <svg viewBox="0 0 24 24"><path d="M3 6l9-4 9 4v6c0 5-4 9-9 11C7 21 3 17 3 12z"/></svg>
-            <span>Device</span>
+
+          <div class="dest-toggle on" data-dest="local" onclick="App.toggleDest('local')">
+            <div class="dest-icon">📱</div>
+            <div class="dest-info">
+              <span class="dest-name">Device</span>
+              <span class="dest-hint">Private to you</span>
+            </div>
+            <div class="dest-check">✓</div>
           </div>
-          <div class="dest-toggle" id="dest-monday" onclick="App.toggleDest('monday')">
-            <svg viewBox="0 0 24 24"><circle cx="6" cy="12" r="3"/><circle cx="12" cy="12" r="3"/><circle cx="18" cy="12" r="3"/></svg>
-            <span>Monday</span>
+
+          <div class="dest-toggle" data-dest="monday" onclick="App.toggleDest('monday')">
+            <div class="dest-icon">🟣</div>
+            <div class="dest-info">
+              <span class="dest-name">Monday</span>
+              <span class="dest-hint" id="dest-monday-hint">Not configured</span>
+            </div>
+            <div class="dest-check"></div>
+            <div class="setup-badge" id="dest-monday-badge">Setup</div>
           </div>
-          <div class="dest-toggle" id="dest-sheets" onclick="App.toggleDest('sheets')">
-            <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
-            <span>Sheets</span>
+
+          <div class="dest-toggle" data-dest="my-sheet" onclick="App.toggleDest('my-sheet')">
+            <div class="dest-icon">📊</div>
+            <div class="dest-info">
+              <span class="dest-name">My Sheet</span>
+              <span class="dest-hint" id="dest-mysheet-hint">Not configured</span>
+            </div>
+            <div class="dest-check"></div>
+            <div class="setup-badge" id="dest-mysheet-badge">Setup</div>
           </div>
-          <div class="dest-toggle" id="dest-notes" onclick="App.toggleDest('notes')">
-            <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
-            <span>Notes</span>
+
+          <div class="dest-toggle" data-dest="team-sheet" onclick="App.toggleDest('team-sheet')">
+            <div class="dest-icon">🌐</div>
+            <div class="dest-info">
+              <span class="dest-name">Team Sheet</span>
+              <span class="dest-hint" id="dest-teamsheet-hint">Not configured</span>
+            </div>
+            <div class="dest-check"></div>
+            <div class="setup-badge" id="dest-teamsheet-badge">Setup</div>
           </div>
+
+          <div class="dest-toggle on" data-dest="notes" onclick="App.toggleDest('notes')" style="grid-column:span 2">
+            <div class="dest-icon">📝</div>
+            <div class="dest-info">
+              <span class="dest-name">Apple Notes</span>
+              <span class="dest-hint">Opens iOS Share Sheet</span>
+            </div>
+            <div class="dest-check">✓</div>
+          </div>
+
         </div>
       </div>
 
       <button class="btn btn-primary" id="save-btn" onclick="App.saveCapture()">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap: "round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
         Save Site
       </button>
 
     </div>
 
-    <!-- ── History ─────────────────────────────────────── -->
+    <!-- ── History ────────────────────────────────────────────── -->
     <div class="screen" id="screen-history">
-      <div id="history-header" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
-        <div style="font-size:13px;color:var(--text-dim)" id="history-count"></div>
+      <div class="history-toolbar">
+        <span class="history-count" id="history-count">0 sites</span>
         <button class="btn btn-secondary btn-sm" onclick="App.exportAllCSV()">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
           Export CSV
@@ -354,82 +677,162 @@
       <div id="history-list"></div>
     </div>
 
-    <!-- ── Settings ────────────────────────────────────── -->
+    <!-- ── Settings ──────────────────────────────────────────── -->
     <div class="screen" id="screen-settings">
 
-      <details class="settings-section" open>
-        <summary>📍 GPS &amp; App</summary>
+      <!-- Profile card -->
+      <div class="profile-card" id="profile-card">
+        <div class="profile-avatar-lg" id="s-avatar">?</div>
+        <div class="profile-info">
+          <div class="profile-name" id="s-prof-name">Setup your profile</div>
+          <div class="profile-company" id="s-prof-company">Tap to edit</div>
+          <div class="profile-stats" id="s-prof-stats"></div>
+        </div>
+      </div>
+
+      <span class="settings-section-label">Profile</span>
+
+      <details class="settings-panel">
+        <summary>
+          <div class="summary-icon" style="background:rgba(249,115,22,0.12)">👤</div>
+          <div class="summary-text">
+            <div class="summary-title">My Profile</div>
+            <div class="summary-sub">Name, company, identity</div>
+          </div>
+          <span class="summary-chevron">▶</span>
+        </summary>
         <div class="settings-body">
-          <p class="settings-hint">Site Scout works best when added to your iPhone home screen. In Safari, tap Share → "Add to Home Screen".</p>
-          <button class="btn btn-secondary" onclick="App.refreshLocation()">Refresh GPS Location</button>
+          <div class="info-box" style="margin-bottom:14px">
+            <span class="info-icon">💡</span>
+            <span>Your name is included in every capture. When you and your team share a Google Sheet, each person's entries are clearly attributed.</span>
+          </div>
+          <div class="field-group">
+            <label class="field-label">Your Name</label>
+            <input type="text" id="s-name" placeholder="e.g. Dan Byrne" autocapitalize="words" oninput="App.saveSetting('userName', this.value); App.refreshProfileUI()">
+          </div>
+          <div class="field-group">
+            <label class="field-label">Company</label>
+            <input type="text" id="s-company" placeholder="e.g. Blue Anvil" autocapitalize="words" oninput="App.saveSetting('userCompany', this.value); App.refreshProfileUI()">
+          </div>
         </div>
       </details>
 
-      <details class="settings-section">
-        <summary>Monday.com</summary>
+      <span class="settings-section-label">Personal Destinations</span>
+
+      <details class="settings-panel">
+        <summary>
+          <div class="summary-icon" style="background:rgba(139,92,246,0.12)">🟣</div>
+          <div class="summary-text">
+            <div class="summary-title">Monday.com</div>
+            <div class="summary-sub">Creates a new board item per capture</div>
+          </div>
+          <span class="summary-chevron">▶</span>
+        </summary>
         <div class="settings-body">
-          <p class="settings-hint">Enter your Monday.com API v2 token and the Board ID where site leads should be created. Find your API token under your profile → Developers.</p>
+          <p class="settings-hint">Your personal monday.com board. Find your API token under your profile avatar → Developers. The Board ID is the number in the board URL.</p>
           <div class="field-group">
             <label class="field-label">API Token</label>
-            <input type="password" id="s-monday-token" placeholder="eyJ…" oninput="App.saveSetting('mondayToken', this.value)">
+            <input type="password" id="s-monday-token" placeholder="eyJ…" oninput="App.saveSetting('mondayToken', this.value); App.refreshDestUI()">
           </div>
           <div class="field-group">
             <label class="field-label">Board ID</label>
-            <input type="number" id="s-monday-board" placeholder="1234567890" oninput="App.saveSetting('mondayBoardId', this.value)">
+            <input type="number" id="s-monday-board" placeholder="1234567890" oninput="App.saveSetting('mondayBoardId', this.value); App.refreshDestUI()">
           </div>
           <div class="field-group">
-            <label class="field-label">Group ID (optional)</label>
+            <label class="field-label">Group ID <span style="font-weight:500;text-transform:none;letter-spacing:0">(optional)</span></label>
             <input type="text" id="s-monday-group" placeholder="topics" oninput="App.saveSetting('mondayGroupId', this.value)">
           </div>
           <button class="btn btn-secondary btn-sm mt-8" onclick="App.testMonday()">Test Connection</button>
         </div>
       </details>
 
-      <details class="settings-section">
-        <summary>Google Sheets</summary>
+      <details class="settings-panel">
+        <summary>
+          <div class="summary-icon" style="background:rgba(16,185,129,0.12)">📊</div>
+          <div class="summary-text">
+            <div class="summary-title">My Google Sheet</div>
+            <div class="summary-sub">Your personal capture log</div>
+          </div>
+          <span class="summary-chevron">▶</span>
+        </summary>
         <div class="settings-body">
-          <p class="settings-hint">
-            To write to Google Sheets, create a Google Apps Script Web App:
-            <br>1. Open your sheet → Extensions → Apps Script
-            <br>2. Paste the script from the <a href="#" onclick="App.showSheetsScript();return false">template below</a>
-            <br>3. Deploy → New deployment → Web app → Anyone
-            <br>4. Copy the Web App URL here
-          </p>
+          <p class="settings-hint">A private spreadsheet only you write to. <a href="#" onclick="App.showSheetsScript('my');return false">Tap here for the Apps Script setup template</a> — takes about 2 minutes.</p>
           <div class="field-group">
             <label class="field-label">Web App URL</label>
-            <input type="text" id="s-sheets-url" placeholder="https://script.google.com/…/exec" oninput="App.saveSetting('sheetsUrl', this.value)">
+            <input type="text" id="s-mysheet-url" placeholder="https://script.google.com/…/exec" oninput="App.saveSetting('mySheetUrl', this.value); App.refreshDestUI()">
           </div>
-          <button class="btn btn-secondary btn-sm mt-8" onclick="App.testSheets()">Test Connection</button>
+          <button class="btn btn-secondary btn-sm mt-8" onclick="App.testSheet('my')">Test Connection</button>
         </div>
       </details>
 
-      <details class="settings-section">
-        <summary>Apple Notes</summary>
-        <div class="settings-body">
-          <p class="settings-hint">When you save to Apple Notes, the iOS Share Sheet opens — just choose Notes. Works automatically, no setup needed.</p>
-          <div style="background:var(--surface2);border-radius:10px;padding:12px;font-size:13px;color:var(--text-dim)">
-            ✓ Ready — no configuration required
-          </div>
-        </div>
-      </details>
+      <span class="settings-section-label">Team Sharing</span>
 
-      <details class="settings-section">
-        <summary>Danger Zone</summary>
-        <div class="settings-body">
-          <p class="settings-hint">Permanently delete all captures stored on this device. This cannot be undone.</p>
-          <button class="btn btn-danger" onclick="App.clearAllData()">Clear All Local Data</button>
-        </div>
-      </details>
-
-      <div style="text-align:center;padding:20px;font-size:12px;color:var(--text-dim)">
-        Site Scout v1.0 · Built for MyRoutines
+      <div class="info-box" style="margin-bottom:10px">
+        <span class="info-icon">🌐</span>
+        <span>Give your whole team the same Team Sheet URL. Every capture by every team member goes into one shared spreadsheet — with each person's name attached.</span>
       </div>
 
-    </div>
+      <details class="settings-panel">
+        <summary>
+          <div class="summary-icon" style="background:rgba(20,184,166,0.12)">🌐</div>
+          <div class="summary-text">
+            <div class="summary-title">Team Google Sheet</div>
+            <div class="summary-sub">Shared with your whole team</div>
+          </div>
+          <span class="summary-chevron">▶</span>
+        </summary>
+        <div class="settings-body">
+          <div class="team-badge">🤝 Team destination</div>
+          <p class="settings-hint">One person on your team sets up the Apps Script, deploys it, and shares the URL with everyone. All team members enter the same URL here. <a href="#" onclick="App.showSheetsScript('team');return false">See the template</a>.</p>
+          <div class="field-group">
+            <label class="field-label">Team Sheet URL</label>
+            <input type="text" id="s-teamsheet-url" placeholder="https://script.google.com/…/exec" oninput="App.saveSetting('teamSheetUrl', this.value); App.refreshDestUI()">
+          </div>
+          <button class="btn btn-secondary btn-sm mt-8" onclick="App.testSheet('team')">Test Connection</button>
+        </div>
+      </details>
 
+      <span class="settings-section-label">App</span>
+
+      <details class="settings-panel">
+        <summary>
+          <div class="summary-icon" style="background:rgba(59,130,246,0.12)">ℹ️</div>
+          <div class="summary-text">
+            <div class="summary-title">About &amp; GPS</div>
+            <div class="summary-sub">Install, permissions, version</div>
+          </div>
+          <span class="summary-chevron">▶</span>
+        </summary>
+        <div class="settings-body">
+          <div class="info-box success" style="margin-bottom:14px">
+            <span class="info-icon">📲</span>
+            <span>Add to Home Screen in Safari for the best experience: tap the Share button → "Add to Home Screen".</span>
+          </div>
+          <button class="btn btn-secondary" onclick="App.refreshLocation()">Refresh GPS Location</button>
+          <div style="text-align:center;margin-top:20px;font-size:12px;color:var(--text-muted)">
+            Site Scout v2.0 · Each user's data is private to their device
+          </div>
+        </div>
+      </details>
+
+      <details class="settings-panel">
+        <summary>
+          <div class="summary-icon" style="background:rgba(239,68,68,0.1)">⚠️</div>
+          <div class="summary-text">
+            <div class="summary-title">Danger Zone</div>
+            <div class="summary-sub">Irreversible actions</div>
+          </div>
+          <span class="summary-chevron">▶</span>
+        </summary>
+        <div class="settings-body">
+          <p class="settings-hint">Permanently delete all captures and settings stored on this device.</p>
+          <button class="btn btn-danger" onclick="App.clearAllData()">Clear All My Data</button>
+        </div>
+      </details>
+
+    </div>
   </div>
 
-  <!-- Tab bar -->
   <div id="tabbar">
     <button class="tab-btn active" id="tab-capture" onclick="App.showTab('capture')">
       <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3" fill="currentColor" stroke="none"/></svg>
@@ -438,21 +841,21 @@
     <button class="tab-btn" id="tab-history" onclick="App.showTab('history')">
       <svg viewBox="0 0 24 24"><path d="M12 8v4l3 3"/><circle cx="12" cy="12" r="9"/></svg>
       History
+      <div class="tab-badge" id="history-badge" style="display:none">0</div>
     </button>
     <button class="tab-btn" id="tab-settings" onclick="App.showTab('settings')">
-      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06-.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
       Settings
     </button>
   </div>
 
 </div>
 
-<!-- Toast -->
 <div id="toast"></div>
 
-<!-- Modal -->
 <div id="modal-overlay" onclick="App.closeModal()">
   <div id="modal" onclick="event.stopPropagation()">
+    <div class="modal-handle"></div>
     <div id="modal-content"></div>
     <button class="btn btn-secondary mt-16" onclick="App.closeModal()">Close</button>
   </div>
@@ -460,91 +863,199 @@
 
 <script>
 const App = (() => {
-  // ── State ───────────────────────────────────────────────────
-  let state = {
+
+  // ── State ─────────────────────────────────────────────────────
+  const S = {
     tab: 'capture',
     location: null,
-    locationError: null,
     recording: false,
     transcript: '',
     recognition: null,
-    destinations: { local: true, monday: false, sheets: false, notes: false },
+    destinations: { local: true, monday: false, 'my-sheet': false, 'team-sheet': false, notes: true },
     settings: {},
+    profile: {},
     captures: [],
     saving: false,
   };
 
-  // ── Init ────────────────────────────────────────────────────
+  // ── Init ──────────────────────────────────────────────────────
   function init() {
-    state.settings = loadSettings();
-    state.captures = loadCaptures();
+    S.settings = load('ss_settings') || {};
+    S.profile  = load('ss_profile')  || {};
+    S.captures = load('ss_captures') || [];
+
+    const hasProfile = S.profile.setupComplete;
+    if (!hasProfile) {
+      document.getElementById('onboarding').style.display = 'flex';
+    }
+
     applySettings();
-    applyDestinations();
+    refreshProfileUI();
+    refreshDestUI();
+    updateHistoryBadge();
     startLocation();
     setupSpeech();
-    updateCaptureCount();
   }
 
-  // ── Settings ────────────────────────────────────────────────
-  function loadSettings() {
-    try { return JSON.parse(localStorage.getItem('ss_settings') || '{}'); } catch { return {}; }
-  }
+  // ── Persistence ───────────────────────────────────────────────
+  function load(k) { try { return JSON.parse(localStorage.getItem(k)); } catch { return null; } }
+  function save(k, v) { localStorage.setItem(k, JSON.stringify(v)); }
 
   function saveSetting(key, value) {
-    state.settings[key] = value;
-    localStorage.setItem('ss_settings', JSON.stringify(state.settings));
+    S.settings[key] = value;
+    save('ss_settings', S.settings);
   }
 
   function applySettings() {
-    const s = state.settings;
-    setVal('s-monday-token', s.mondayToken || '');
-    setVal('s-monday-board', s.mondayBoardId || '');
-    setVal('s-monday-group', s.mondayGroupId || '');
-    setVal('s-sheets-url', s.sheetsUrl || '');
+    setVal('s-name',          S.profile.name    || '');
+    setVal('s-company',       S.profile.company || '');
+    setVal('s-monday-token',  S.settings.mondayToken  || '');
+    setVal('s-monday-board',  S.settings.mondayBoardId || '');
+    setVal('s-monday-group',  S.settings.mondayGroupId || '');
+    setVal('s-mysheet-url',   S.settings.mySheetUrl   || '');
+    setVal('s-teamsheet-url', S.settings.teamSheetUrl || '');
   }
 
   function setVal(id, v) { const el = document.getElementById(id); if (el) el.value = v; }
 
-  // ── Captures (local storage) ─────────────────────────────────
-  function loadCaptures() {
-    try { return JSON.parse(localStorage.getItem('ss_captures') || '[]'); } catch { return []; }
+  // ── Onboarding ────────────────────────────────────────────────
+  function obNext() {
+    document.getElementById('ob-step-0').classList.remove('active');
+    document.getElementById('ob-step-1').classList.add('active');
+    document.getElementById('ob-dot-0').classList.remove('active');
+    document.getElementById('ob-dot-1').classList.add('active');
   }
 
-  function saveCaptures() {
-    localStorage.setItem('ss_captures', JSON.stringify(state.captures));
-    updateCaptureCount();
+  function obFinish() {
+    const name    = document.getElementById('ob-name').value.trim();
+    const company = document.getElementById('ob-company').value.trim();
+    S.profile = { name: name || 'Field User', company, setupComplete: true };
+    save('ss_profile', S.profile);
+    setVal('s-name', S.profile.name);
+    setVal('s-company', S.profile.company);
+    closeOnboarding();
   }
 
-  function updateCaptureCount() {
-    const n = state.captures.length;
-    document.getElementById('capture-count').textContent = `${n} site${n !== 1 ? 's' : ''}`;
+  function obSkip() {
+    S.profile = { name: 'Field User', company: '', setupComplete: true };
+    save('ss_profile', S.profile);
+    closeOnboarding();
   }
 
-  // ── GPS ─────────────────────────────────────────────────────
-  function startLocation() {
-    if (!navigator.geolocation) {
-      setGPS('error', 'GPS not available');
+  function closeOnboarding() {
+    document.getElementById('onboarding').style.display = 'none';
+    refreshProfileUI();
+  }
+
+  // ── Profile UI ────────────────────────────────────────────────
+  function refreshProfileUI() {
+    const name    = (S.settings.userName || S.profile.name || '?').trim();
+    const company = S.settings.userCompany || S.profile.company || '';
+    const initials = name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase() || '?';
+
+    setText('hdr-avatar', initials);
+    setText('hdr-name',   name.split(' ')[0]);
+    setText('s-avatar',   initials);
+    setText('s-prof-name', name);
+    setText('s-prof-company', company || 'No company set');
+
+    const n = S.captures.length;
+    document.getElementById('s-prof-stats').innerHTML = `
+      <div class="profile-stat">
+        <div class="profile-stat-val">${n}</div>
+        <div class="profile-stat-lbl">Sites</div>
+      </div>
+      <div class="profile-stat">
+        <div class="profile-stat-val">${S.captures.filter(c => isToday(c.timestamp)).length}</div>
+        <div class="profile-stat-lbl">Today</div>
+      </div>
+    `;
+  }
+
+  function isToday(ts) {
+    if (!ts) return false;
+    const d = new Date(ts);
+    const n = new Date();
+    return d.getFullYear() === n.getFullYear() && d.getMonth() === n.getMonth() && d.getDate() === n.getDate();
+  }
+
+  // ── Destination UI ────────────────────────────────────────────
+  function refreshDestUI() {
+    const mon = !!(S.settings.mondayToken && S.settings.mondayBoardId);
+    const mys = !!S.settings.mySheetUrl;
+    const tms = !!S.settings.teamSheetUrl;
+
+    toggleBadge('monday',    !mon, 'dest-monday-badge');
+    toggleBadge('my-sheet',  !mys, 'dest-mysheet-badge');
+    toggleBadge('team-sheet',!tms, 'dest-teamsheet-badge');
+
+    setText('dest-monday-hint',    mon ? 'Board configured' : 'Not configured');
+    setText('dest-mysheet-hint',   mys ? 'Ready' : 'Not configured');
+    setText('dest-teamsheet-hint', tms ? 'Ready' : 'Not configured');
+  }
+
+  function toggleBadge(dest, show, badgeId) {
+    const badge = document.getElementById(badgeId);
+    if (badge) badge.style.display = show ? 'block' : 'none';
+    // auto-disable toggle if not configured and was on
+    if (show && S.destinations[dest]) {
+      S.destinations[dest] = false;
+      applyDestToggles();
+    }
+  }
+
+  function applyDestToggles() {
+    Object.keys(S.destinations).forEach(d => {
+      const el = document.querySelector(`.dest-toggle[data-dest="${d}"]`);
+      if (!el) return;
+      el.classList.toggle('on', !!S.destinations[d]);
+      const check = el.querySelector('.dest-check');
+      if (check) check.textContent = S.destinations[d] ? '✓' : '';
+    });
+  }
+
+  function toggleDest(key) {
+    // Check if configured first (except local/notes)
+    if (key === 'monday' && !(S.settings.mondayToken && S.settings.mondayBoardId)) {
+      toast('Configure Monday.com in Settings first', 'error');
+      showTab('settings');
       return;
     }
-    setGPS('acquiring', 'Acquiring GPS…');
+    if (key === 'my-sheet' && !S.settings.mySheetUrl) {
+      toast('Configure My Sheet in Settings first', 'error');
+      showTab('settings');
+      return;
+    }
+    if (key === 'team-sheet' && !S.settings.teamSheetUrl) {
+      toast('Configure Team Sheet in Settings first', 'error');
+      showTab('settings');
+      return;
+    }
+    S.destinations[key] = !S.destinations[key];
+    applyDestToggles();
+  }
+
+  // ── GPS ───────────────────────────────────────────────────────
+  function startLocation() {
+    if (!navigator.geolocation) { setGPS('error', 'GPS not available', ''); return; }
+    setGPS('acquiring', 'Acquiring GPS…', '');
     navigator.geolocation.getCurrentPosition(onLocation, onLocationError, {
-      enableHighAccuracy: true, timeout: 15000, maximumAge: 30000
+      enableHighAccuracy: true, timeout: 15000, maximumAge: 30000,
     });
   }
 
   async function onLocation(pos) {
-    state.location = pos.coords;
+    S.location = pos.coords;
     const lat = pos.coords.latitude.toFixed(6);
     const lng = pos.coords.longitude.toFixed(6);
-    document.getElementById('gps-coords').textContent = `${lat}, ${lng}`;
-    setGPS('acquiring', 'Resolving address…');
+    setText('gps-coords', `${lat}, ${lng}`);
+    setGPS('acquiring', 'Resolving address…', `${lat}, ${lng}`);
     try {
       const r = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json`);
       const d = await r.json();
-      const addr = formatAddress(d.address);
-      setGPS('ready', addr);
+      setGPS('ready', formatAddress(d.address), `${pos.coords.latitude.toFixed(4)}, ${pos.coords.longitude.toFixed(4)}`);
     } catch {
-      setGPS('ready', `${lat}, ${lng}`);
+      setGPS('ready', `${lat}, ${lng}`, '');
     }
   }
 
@@ -553,39 +1064,29 @@ const App = (() => {
     if (a.house_number && a.road) parts.push(`${a.house_number} ${a.road}`);
     else if (a.road) parts.push(a.road);
     if (a.city || a.town || a.village) parts.push(a.city || a.town || a.village);
+    if (a.state) parts.push(a.state);
     return parts.join(', ') || 'Location acquired';
   }
 
-  function onLocationError(err) {
-    state.locationError = err.message;
-    setGPS('error', 'GPS unavailable — tap Settings → Refresh');
-  }
+  function onLocationError() { setGPS('error', 'GPS unavailable', ''); }
 
-  function setGPS(cls, addr) {
+  function setGPS(cls, addr, coords) {
     const pill = document.getElementById('gps-pill');
     pill.className = cls;
-    pill.querySelector('.address').textContent = addr;
+    pill.querySelector('.gps-address').textContent = addr;
+    pill.querySelector('.gps-icon').textContent = cls === 'ready' ? '📍' : cls === 'error' ? '⚠️' : '⟳';
+    const c = document.getElementById('gps-coords');
+    if (c) c.textContent = coords;
   }
 
-  function refreshLocation() {
-    state.location = null;
-    document.getElementById('gps-coords').textContent = '';
-    startLocation();
-    toast('Refreshing GPS…', 'info');
-  }
+  function refreshLocation() { S.location = null; startLocation(); toast('Refreshing GPS…', 'info'); }
 
-  // ── Speech ───────────────────────────────────────────────────
+  // ── Speech ─────────────────────────────────────────────────────
   function setupSpeech() {
     const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (!SR) {
-      document.getElementById('speech-warning').style.display = 'block';
-      return;
-    }
+    if (!SR) { document.getElementById('speech-warning').style.display = 'flex'; return; }
     const r = new SR();
-    r.continuous = false;
-    r.interimResults = true;
-    r.lang = 'en-CA';
-
+    r.continuous = false; r.interimResults = true; r.lang = 'en-CA';
     r.onresult = (e) => {
       let interim = '', final = '';
       for (let i = e.resultIndex; i < e.results.length; i++) {
@@ -593,449 +1094,354 @@ const App = (() => {
         else interim += e.results[i][0].transcript;
       }
       const text = (final || interim).trim();
-      document.getElementById('voice-status').textContent = text || 'Listening…';
-      if (final) state.transcript = final.trim();
+      const vsEl = document.getElementById('voice-status');
+      vsEl.className = 'active';
+      vsEl.textContent = text || 'Listening…';
+      if (final) S.transcript = final.trim();
     };
-
-    r.onend = () => {
-      if (state.recording) {
-        // Was still recording — stopped by silence
-        stopRecording();
-      }
-    };
-
+    r.onend = () => { if (S.recording) stopRecording(); };
     r.onerror = (e) => {
-      if (e.error !== 'aborted') {
-        toast('Microphone error: ' + e.error, 'error');
-      }
-      state.recording = false;
-      updateMicUI(false);
+      if (e.error !== 'aborted') toast('Mic error: ' + e.error, 'error');
+      S.recording = false; updateMicUI(false);
     };
-
-    state.recognition = r;
+    S.recognition = r;
   }
 
-  function toggleRecording() {
-    if (state.recording) stopRecording();
-    else startRecording();
-  }
+  function toggleRecording() { S.recording ? stopRecording() : startRecording(); }
 
   function startRecording() {
-    if (!state.recognition) {
-      toast('Voice not supported — type manually', 'error');
-      return;
-    }
-    state.recording = true;
-    state.transcript = '';
-    document.getElementById('voice-status').textContent = 'Listening…';
+    if (!S.recognition) { toast('Voice requires Safari on iOS', 'error'); return; }
+    S.recording = true; S.transcript = '';
     updateMicUI(true);
-    try { state.recognition.start(); } catch(e) { /* already started */ }
+    const vs = document.getElementById('voice-status');
+    vs.className = 'active'; vs.textContent = 'Listening… (tap to stop)';
+    try { S.recognition.start(); } catch {}
   }
 
   function stopRecording() {
-    state.recording = false;
-    updateMicUI(false);
-    if (state.recognition) {
-      try { state.recognition.stop(); } catch {}
-    }
-    if (state.transcript) {
-      // Auto-fill site name if empty
+    S.recording = false; updateMicUI(false);
+    try { S.recognition.stop(); } catch {}
+    const vs = document.getElementById('voice-status');
+    if (S.transcript) {
+      vs.className = 'done';
+      vs.textContent = '✓ ' + S.transcript;
       const nameEl = document.getElementById('site-name');
-      if (!nameEl.value.trim()) {
-        nameEl.value = capFirst(state.transcript);
-      } else {
-        // Append to notes
+      if (!nameEl.value.trim()) nameEl.value = capFirst(S.transcript);
+      else {
         const notesEl = document.getElementById('site-notes');
-        notesEl.value = (notesEl.value ? notesEl.value + '\n' : '') + state.transcript;
+        notesEl.value = (notesEl.value ? notesEl.value + '\n' : '') + S.transcript;
       }
-      document.getElementById('voice-status').textContent = '✓ ' + state.transcript;
     } else {
-      document.getElementById('voice-status').textContent = 'Tap to start recording';
+      vs.className = ''; vs.textContent = 'Tap to start recording';
     }
   }
 
   function updateMicUI(listening) {
     const btn = document.getElementById('mic-btn');
+    btn.classList.toggle('listening', listening);
+    const icon = document.getElementById('mic-icon');
     if (listening) {
-      btn.classList.add('listening');
-      btn.innerHTML = `<svg viewBox="0 0 24 24" style="width:52px;height:52px;stroke:var(--red);fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round">
-        <rect x="9" y="2" width="6" height="11" rx="3" fill="rgba(239,68,68,0.2)"/>
-        <path d="M5 10a7 7 0 0 0 14 0"/>
-        <line x1="12" y1="17" x2="12" y2="22"/>
-        <line x1="8" y1="22" x2="16" y2="22"/>
-      </svg>`;
-      document.getElementById('voice-status').textContent = 'Listening… (tap to stop)';
+      icon.innerHTML = `<rect x="9" y="2" width="6" height="11" rx="3" fill="rgba(239,68,68,0.2)"/><path d="M5 10a7 7 0 0 0 14 0"/><line x1="12" y1="17" x2="12" y2="22"/><line x1="8" y1="22" x2="16" y2="22"/>`;
     } else {
-      btn.classList.remove('listening');
-      btn.innerHTML = `<svg viewBox="0 0 24 24" style="width:52px;height:52px;stroke:var(--text-dim);fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round">
-        <rect x="9" y="2" width="6" height="11" rx="3"/>
-        <path d="M5 10a7 7 0 0 0 14 0"/>
-        <line x1="12" y1="17" x2="12" y2="22"/>
-        <line x1="8" y1="22" x2="16" y2="22"/>
-      </svg>`;
+      icon.innerHTML = `<rect x="9" y="2" width="6" height="11" rx="3"/><path d="M5 10a7 7 0 0 0 14 0"/><line x1="12" y1="17" x2="12" y2="22"/><line x1="8" y1="22" x2="16" y2="22"/>`;
     }
   }
 
-  // ── Destinations ─────────────────────────────────────────────
-  function applyDestinations() {
-    Object.keys(state.destinations).forEach(d => {
-      const el = document.getElementById('dest-' + d);
-      if (el) el.classList.toggle('on', state.destinations[d]);
-    });
-  }
-
-  function toggleDest(key) {
-    state.destinations[key] = !state.destinations[key];
-    applyDestinations();
-  }
-
-  // ── Save ─────────────────────────────────────────────────────
+  // ── Save ──────────────────────────────────────────────────────
   async function saveCapture() {
-    if (state.saving) return;
-
+    if (S.saving) return;
     const siteName = document.getElementById('site-name').value.trim();
-    const notes = document.getElementById('site-notes').value.trim();
-
+    const notes    = document.getElementById('site-notes').value.trim();
     if (!siteName) { toast('Enter a site name first', 'error'); return; }
-    if (!state.location && !state.locationError) {
-      toast('Still acquiring GPS — try again in a moment', 'error'); return;
-    }
-
-    state.saving = true;
-    const btn = document.getElementById('save-btn');
-    btn.disabled = true;
-    btn.textContent = 'Saving…';
+    if (!S.location && !S.location) { /* allow anyway but warn */ }
 
     const now = new Date();
     const capture = {
       id: Date.now().toString(),
-      siteName,
-      notes,
-      transcript: state.transcript,
-      lat: state.location ? state.location.latitude : null,
-      lng: state.location ? state.location.longitude : null,
-      address: document.getElementById('gps-pill').querySelector('.address').textContent,
+      capturedBy: S.settings.userName || S.profile.name || 'Unknown',
+      company:    S.settings.userCompany || S.profile.company || '',
+      siteName, notes, transcript: S.transcript,
+      lat:     S.location ? S.location.latitude  : null,
+      lng:     S.location ? S.location.longitude : null,
+      address: document.getElementById('gps-pill').querySelector('.gps-address').textContent,
       timestamp: now.toISOString(),
-      dateStr: formatDate(now),
+      dateStr:   formatDate(now),
       savedTo: [],
     };
 
-    const dests = state.destinations;
+    S.saving = true;
+    const btn = document.getElementById('save-btn');
+    btn.disabled = true; btn.textContent = 'Saving…';
+
     const results = [];
 
-    // Local
-    if (dests.local) {
-      state.captures.unshift(capture);
-      saveCaptures();
+    if (S.destinations.local) {
+      S.captures.unshift(capture);
+      save('ss_captures', S.captures);
       capture.savedTo.push('local');
-      results.push('Saved locally');
+    }
+    if (S.destinations.monday) {
+      try { await saveToMonday(capture); capture.savedTo.push('monday'); results.push('monday ✓'); }
+      catch (e) { results.push('monday ✗ (' + e.message + ')'); }
+    }
+    if (S.destinations['my-sheet']) {
+      try { await saveToSheet(S.settings.mySheetUrl, capture); capture.savedTo.push('my-sheet'); results.push('My Sheet ✓'); }
+      catch (e) { results.push('My Sheet ✗ (' + e.message + ')'); }
+    }
+    if (S.destinations['team-sheet']) {
+      try { await saveToSheet(S.settings.teamSheetUrl, capture); capture.savedTo.push('team-sheet'); results.push('Team Sheet ✓'); }
+      catch (e) { results.push('Team Sheet ✗ (' + e.message + ')'); }
+    }
+    if (S.destinations.notes) {
+      await shareToNotes(capture);
+      capture.savedTo.push('notes');
     }
 
-    // Monday.com
-    if (dests.monday) {
-      try {
-        await saveToMonday(capture);
-        capture.savedTo.push('monday');
-        results.push('monday.com ✓');
-      } catch (e) {
-        results.push('monday.com ✗ (' + e.message + ')');
-      }
+    // always cache locally
+    if (!S.destinations.local) {
+      S.captures.unshift(capture);
+      save('ss_captures', S.captures);
+    } else {
+      const idx = S.captures.findIndex(c => c.id === capture.id);
+      if (idx >= 0) { S.captures[idx] = capture; save('ss_captures', S.captures); }
     }
 
-    // Google Sheets
-    if (dests.sheets) {
-      try {
-        await saveToSheets(capture);
-        capture.savedTo.push('sheets');
-        results.push('Google Sheets ✓');
-      } catch (e) {
-        results.push('Sheets ✗ (' + e.message + ')');
-      }
-    }
-
-    // Apple Notes (share sheet)
-    if (dests.notes) {
-      const shared = await shareToNotes(capture);
-      if (shared) capture.savedTo.push('notes');
-    }
-
-    // Update save timestamp in local if already saved
-    if (dests.local) {
-      const idx = state.captures.findIndex(c => c.id === capture.id);
-      if (idx >= 0) { state.captures[idx] = capture; saveCaptures(); }
-    } else if (!dests.local) {
-      // Save locally anyway as cache
-      state.captures.unshift(capture);
-      saveCaptures();
-    }
-
-    state.saving = false;
+    updateHistoryBadge();
+    refreshProfileUI();
+    S.saving = false;
     btn.disabled = false;
     btn.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg> Save Site`;
 
-    const hasError = results.some(r => r.includes('✗'));
-    toast(results.join(' · ') || 'Saved!', hasError ? 'error' : 'success');
+    const hasErr = results.some(r => r.includes('✗'));
+    toast(results.length ? results.join(' · ') : 'Saved to device!', hasErr ? 'error' : 'success');
 
-    // Reset form
     document.getElementById('site-name').value = '';
     document.getElementById('site-notes').value = '';
     document.getElementById('voice-status').textContent = 'Tap to start recording';
-    state.transcript = '';
+    document.getElementById('voice-status').className = '';
+    S.transcript = '';
   }
 
-  // ── Monday.com ───────────────────────────────────────────────
-  async function saveToMonday(capture) {
-    const { mondayToken, mondayBoardId, mondayGroupId } = state.settings;
-    if (!mondayToken || !mondayBoardId) throw new Error('Configure Monday.com in Settings');
+  // ── Monday.com ────────────────────────────────────────────────
+  async function saveToMonday(c) {
+    const { mondayToken, mondayBoardId, mondayGroupId } = S.settings;
+    if (!mondayToken || !mondayBoardId) throw new Error('Monday not configured');
 
-    const body = `📍 ${capture.address}\n🌐 ${capture.lat}, ${capture.lng}\n📝 ${capture.notes || 'No additional notes'}\n🗺️ https://maps.google.com/?q=${capture.lat},${capture.lng}`;
-
-    const safeBody = body.replace(/\\/g, '\\\\').replace(/"/g, '\\"').replace(/\n/g, '\\n');
-    const safeName = capture.siteName.replace(/\\/g, '\\\\').replace(/"/g, '\\"');
-
+    const esc = s => (s || '').replace(/\\/g,'\\\\').replace(/"/g,'\\"').replace(/\n/g,'\\n');
+    const body = `📍 ${c.address}\n🌐 ${c.lat}, ${c.lng}\n👤 ${c.capturedBy}${c.company ? ' · ' + c.company : ''}\n📝 ${c.notes || '—'}\n🗺️ https://maps.google.com/?q=${c.lat},${c.lng}`;
     const groupClause = mondayGroupId ? `, group_id: "${mondayGroupId}"` : '';
-    const mutation = `mutation { create_item(board_id: ${mondayBoardId}${groupClause}, item_name: "${safeName}") { id } }`;
-
-    const res1 = await fetch('https://api.monday.com/v2', {
+    const mutation1 = `mutation { create_item(board_id: ${mondayBoardId}${groupClause}, item_name: "${esc(c.siteName)}") { id } }`;
+    const r1 = await fetch('https://api.monday.com/v2', {
       method: 'POST',
       headers: { 'Authorization': mondayToken, 'Content-Type': 'application/json', 'API-Version': '2024-01' },
-      body: JSON.stringify({ query: mutation }),
+      body: JSON.stringify({ query: mutation1 }),
     });
-    const data1 = await res1.json();
-    if (data1.errors) throw new Error(data1.errors[0].message);
-    const itemId = data1.data.create_item.id;
-
-    const safeUpdate = safeBody;
-    const updateMutation = `mutation { create_update(item_id: ${itemId}, body: "${safeUpdate}") { id } }`;
+    const d1 = await r1.json();
+    if (d1.errors) throw new Error(d1.errors[0].message);
+    const itemId = d1.data.create_item.id;
+    const mutation2 = `mutation { create_update(item_id: ${itemId}, body: "${esc(body)}") { id } }`;
     await fetch('https://api.monday.com/v2', {
       method: 'POST',
       headers: { 'Authorization': mondayToken, 'Content-Type': 'application/json', 'API-Version': '2024-01' },
-      body: JSON.stringify({ query: updateMutation }),
+      body: JSON.stringify({ query: mutation2 }),
     });
   }
 
   async function testMonday() {
-    const { mondayToken, mondayBoardId } = state.settings;
+    const { mondayToken, mondayBoardId } = S.settings;
     if (!mondayToken) { toast('Enter API token first', 'error'); return; }
-    toast('Testing connection…', 'info');
+    toast('Testing…', 'info');
     try {
-      const boardClause = mondayBoardId ? `boards(ids: [${mondayBoardId}])` : 'me { name }';
-      const q = mondayBoardId
-        ? `{ boards(ids: [${mondayBoardId}]) { name } }`
-        : `{ me { name } }`;
-      const res = await fetch('https://api.monday.com/v2', {
+      const q = mondayBoardId ? `{ boards(ids:[${mondayBoardId}]){name} }` : `{ me{name} }`;
+      const r = await fetch('https://api.monday.com/v2', {
         method: 'POST',
         headers: { 'Authorization': mondayToken, 'Content-Type': 'application/json' },
         body: JSON.stringify({ query: q }),
       });
-      const d = await res.json();
+      const d = await r.json();
       if (d.errors) throw new Error(d.errors[0].message);
       const name = d.data?.boards?.[0]?.name || d.data?.me?.name || 'OK';
       toast(`Connected: ${name}`, 'success');
-    } catch (e) {
-      toast('Failed: ' + e.message, 'error');
-    }
+    } catch (e) { toast('Failed: ' + e.message, 'error'); }
   }
 
-  // ── Google Sheets ────────────────────────────────────────────
-  async function saveToSheets(capture) {
-    const { sheetsUrl } = state.settings;
-    if (!sheetsUrl) throw new Error('Configure Sheets URL in Settings');
-    await fetch(sheetsUrl, {
-      method: 'POST',
-      mode: 'no-cors',
+  // ── Google Sheets ─────────────────────────────────────────────
+  async function saveToSheet(url, c) {
+    if (!url) throw new Error('Sheet URL not configured');
+    await fetch(url, {
+      method: 'POST', mode: 'no-cors',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        siteName: capture.siteName,
-        notes: capture.notes,
-        lat: capture.lat,
-        lng: capture.lng,
-        address: capture.address,
-        date: capture.dateStr,
-        timestamp: capture.timestamp,
-        mapsUrl: capture.lat ? `https://maps.google.com/?q=${capture.lat},${capture.lng}` : '',
+        capturedBy: c.capturedBy, company: c.company,
+        siteName: c.siteName, notes: c.notes,
+        lat: c.lat, lng: c.lng, address: c.address,
+        date: c.dateStr, timestamp: c.timestamp,
+        mapsUrl: c.lat ? `https://maps.google.com/?q=${c.lat},${c.lng}` : '',
       }),
     });
   }
 
-  async function testSheets() {
-    const { sheetsUrl } = state.settings;
-    if (!sheetsUrl) { toast('Enter Web App URL first', 'error'); return; }
+  async function testSheet(type) {
+    const url = type === 'team' ? S.settings.teamSheetUrl : S.settings.mySheetUrl;
+    if (!url) { toast('Enter the Web App URL first', 'error'); return; }
     toast('Sending test row…', 'info');
     try {
-      await fetch(sheetsUrl, {
+      const name = S.settings.userName || S.profile.name || 'Test User';
+      await fetch(url, {
         method: 'POST', mode: 'no-cors',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ siteName: 'TEST - Site Scout connection check', notes: '', lat: 0, lng: 0, address: 'Test', date: formatDate(new Date()), timestamp: new Date().toISOString(), mapsUrl: '' }),
+        body: JSON.stringify({ capturedBy: name, company: '', siteName: 'TEST - Site Scout connection', notes: '', lat: 0, lng: 0, address: 'Test', date: formatDate(new Date()), timestamp: new Date().toISOString(), mapsUrl: '' }),
       });
       toast('Sent! Check your sheet for the test row', 'success');
-    } catch (e) {
-      toast('Failed: ' + e.message, 'error');
-    }
+    } catch (e) { toast('Failed: ' + e.message, 'error'); }
   }
 
-  function showSheetsScript() {
+  function showSheetsScript(type) {
+    const isTeam = type === 'team';
     const script = `function doPost(e) {
   const data = JSON.parse(e.postData.contents);
   const sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
 
-  // Add header row if sheet is empty
+  // Add header row on first use
   if (sheet.getLastRow() === 0) {
-    sheet.appendRow(['Site Name','Notes','Latitude','Longitude',
-      'Address','Date','Timestamp','Maps Link']);
+    sheet.appendRow([
+      'Captured By','Company','Site Name','Notes',
+      'Latitude','Longitude','Address',
+      'Date','Timestamp','Maps Link'
+    ]);
   }
 
   sheet.appendRow([
-    data.siteName, data.notes, data.lat, data.lng,
-    data.address, data.date, data.timestamp, data.mapsUrl
+    data.capturedBy, data.company, data.siteName, data.notes,
+    data.lat, data.lng, data.address,
+    data.date, data.timestamp, data.mapsUrl
   ]);
 
   return ContentService
     .createTextOutput(JSON.stringify({ status: 'ok' }))
     .setMimeType(ContentService.MimeType.JSON);
 }`;
-    showModal('Google Apps Script Template', 'Copy this into your Apps Script editor, then deploy as a Web App.', `<pre style="background:var(--surface2);padding:14px;border-radius:10px;font-size:11px;overflow-x:auto;white-space:pre-wrap;border:1px solid var(--border)">${script}</pre>`);
+    const steps = isTeam
+      ? `<div class="info-box" style="margin-bottom:14px"><span class="info-icon">🌐</span><span><strong>One person</strong> on your team sets this up, then shares the URL with everyone else. All team members enter the same URL in "Team Sheet" settings.</span></div>`
+      : '';
+    showModal(isTeam ? 'Team Sheet Setup' : 'My Sheet Setup', '4 quick steps in Google Apps Script', `
+      ${steps}
+      <ol style="font-size:13px;color:var(--text-dim);line-height:2;padding-left:18px;margin-bottom:14px">
+        <li>Open your Google Sheet → Extensions → Apps Script</li>
+        <li>Replace all code with the template below</li>
+        <li>Click Deploy → New deployment → Web app → Execute as: Me → Who has access: Anyone</li>
+        <li>Copy the Web App URL and paste it in Settings</li>
+      </ol>
+      <pre>${script}</pre>
+    `);
   }
 
-  // ── Apple Notes ──────────────────────────────────────────────
-  async function shareToNotes(capture) {
-    const text = [
-      `📍 ${capture.siteName}`,
-      ``,
-      `Address: ${capture.address}`,
-      `GPS: ${capture.lat}, ${capture.lng}`,
-      `Maps: https://maps.google.com/?q=${capture.lat},${capture.lng}`,
-      ``,
-      `Notes: ${capture.notes || '—'}`,
-      ``,
-      `Captured: ${capture.dateStr}`,
-    ].join('\n');
-
+  // ── Apple Notes ───────────────────────────────────────────────
+  async function shareToNotes(c) {
+    const text = [`📍 ${c.siteName}`, ``, `Captured by: ${c.capturedBy}${c.company ? ' · ' + c.company : ''}`, `Address: ${c.address}`, `GPS: ${c.lat}, ${c.lng}`, `Maps: https://maps.google.com/?q=${c.lat},${c.lng}`, ``, `Notes:`, c.notes || '—', ``, `Date: ${c.dateStr}`].join('\n');
     if (navigator.share) {
-      try {
-        await navigator.share({ title: capture.siteName, text });
-        return true;
-      } catch (e) {
-        if (e.name !== 'AbortError') toast('Share failed: ' + e.message, 'error');
-        return false;
-      }
+      try { await navigator.share({ title: c.siteName, text }); }
+      catch (e) { if (e.name !== 'AbortError') toast('Share failed: ' + e.message, 'error'); }
     } else {
-      toast('Share not supported — use Safari on iOS', 'error');
-      return false;
+      toast('Share requires Safari on iOS', 'error');
     }
   }
 
   // ── CSV Export ────────────────────────────────────────────────
   function exportAllCSV() {
-    if (!state.captures.length) { toast('No captures to export', 'error'); return; }
-    const headers = ['Site Name','Notes','Address','Latitude','Longitude','Date','Maps Link','Saved To'];
-    const rows = state.captures.map(c => [
-      csvEsc(c.siteName), csvEsc(c.notes), csvEsc(c.address),
-      c.lat || '', c.lng || '', csvEsc(c.dateStr),
+    if (!S.captures.length) { toast('No captures to export', 'error'); return; }
+    const headers = ['Captured By','Company','Site Name','Notes','Address','Latitude','Longitude','Date','Maps Link','Saved To'];
+    const rows = S.captures.map(c => [
+      cesc(c.capturedBy), cesc(c.company), cesc(c.siteName), cesc(c.notes),
+      cesc(c.address), c.lat||'', c.lng||'', cesc(c.dateStr),
       c.lat ? `https://maps.google.com/?q=${c.lat},${c.lng}` : '',
-      csvEsc((c.savedTo || []).join(', ')),
+      cesc((c.savedTo||[]).join(', ')),
     ]);
-    const csv = [headers, ...rows].map(r => r.join(',')).join('\n');
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url; a.download = `site-scout-${new Date().toISOString().split('T')[0]}.csv`;
-    a.click(); URL.revokeObjectURL(url);
-    toast('CSV downloaded', 'success');
+    download([headers,...rows].map(r=>r.join(',')).join('\n'), `site-scout-${new Date().toISOString().split('T')[0]}.csv`);
+    toast('CSV exported', 'success');
   }
 
-  function exportSingleCSV(capture) {
-    const headers = ['Site Name','Notes','Address','Latitude','Longitude','Date','Maps Link'];
-    const row = [csvEsc(capture.siteName), csvEsc(capture.notes), csvEsc(capture.address), capture.lat || '', capture.lng || '', csvEsc(capture.dateStr), capture.lat ? `https://maps.google.com/?q=${capture.lat},${capture.lng}` : ''];
-    const csv = [headers, row].map(r => r.join(',')).join('\n');
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a'); a.href = url;
-    a.download = `${capture.siteName.replace(/[^a-z0-9]/gi, '-').toLowerCase()}.csv`;
-    a.click(); URL.revokeObjectURL(url);
+  function exportSingleCSV(c) {
+    const headers = ['Captured By','Company','Site Name','Notes','Address','Latitude','Longitude','Date','Maps Link'];
+    const row = [cesc(c.capturedBy),cesc(c.company),cesc(c.siteName),cesc(c.notes),cesc(c.address),c.lat||'',c.lng||'',cesc(c.dateStr),c.lat?`https://maps.google.com/?q=${c.lat},${c.lng}`:''];
+    download([headers,row].map(r=>r.join(',')).join('\n'), `${c.siteName.replace(/[^a-z0-9]/gi,'-').toLowerCase()}.csv`);
     closeModal();
   }
 
+  function download(content, filename) {
+    const url = URL.createObjectURL(new Blob([content], { type: 'text/csv;charset=utf-8;' }));
+    Object.assign(document.createElement('a'), { href: url, download: filename }).click();
+    URL.revokeObjectURL(url);
+  }
+
   function deleteCapture(id) {
-    state.captures = state.captures.filter(c => c.id !== id);
-    saveCaptures();
+    if (!confirm('Delete this capture?')) return;
+    S.captures = S.captures.filter(c => c.id !== id);
+    save('ss_captures', S.captures);
+    refreshProfileUI();
+    updateHistoryBadge();
     renderHistory();
     closeModal();
     toast('Deleted', 'info');
   }
 
-  // ── History Render ────────────────────────────────────────────
+  // ── History ───────────────────────────────────────────────────
   function renderHistory() {
     const list = document.getElementById('history-list');
     const count = document.getElementById('history-count');
-    count.textContent = `${state.captures.length} capture${state.captures.length !== 1 ? 's' : ''}`;
-
-    if (!state.captures.length) {
-      list.innerHTML = `<div class="history-empty">
-        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>
-        <div style="font-size:16px;font-weight:700;margin-bottom:6px">No captures yet</div>
-        <div style="font-size:13px">Go to Capture and log your first site</div>
-      </div>`;
+    count.textContent = `${S.captures.length} site${S.captures.length !== 1 ? 's' : ''}`;
+    if (!S.captures.length) {
+      list.innerHTML = `<div class="history-empty"><div class="history-empty-icon">🗺️</div><h3>No captures yet</h3><p>Go to Capture and log your first site</p></div>`;
       return;
     }
-
-    list.innerHTML = state.captures.map(c => `
+    list.innerHTML = S.captures.map(c => `
       <div class="capture-card" onclick="App.showDetail('${c.id}')">
-        <div class="capture-card-header">
-          <div class="capture-card-name">${esc(c.siteName)}</div>
-          <div class="capture-card-date">${esc(c.dateStr)}</div>
+        <div class="cc-row1">
+          <div class="cc-name">${esc(c.siteName)}</div>
+          <div class="cc-date">${esc(c.dateStr)}</div>
         </div>
-        <div class="capture-card-address">📍 ${esc(c.address)}</div>
-        ${c.notes ? `<div class="capture-card-notes">${esc(c.notes)}</div>` : ''}
-        <div class="capture-card-footer">
-          ${(c.savedTo || []).map(s => `<span class="badge badge-${s}">${s}</span>`).join('')}
-        </div>
+        ${c.capturedBy ? `<div class="cc-author">👤 ${esc(c.capturedBy)}${c.company ? ' · ' + esc(c.company) : ''}</div>` : ''}
+        <div class="cc-address">📍 ${esc(c.address)}</div>
+        ${c.notes ? `<div class="cc-notes">${esc(c.notes)}</div>` : ''}
+        <div class="cc-badges">${(c.savedTo||[]).map(s=>`<span class="badge b-${s}">${s.replace('-',' ')}</span>`).join('')}</div>
       </div>
     `).join('');
   }
 
-  // ── Detail Modal ──────────────────────────────────────────────
+  function updateHistoryBadge() {
+    const n = S.captures.length;
+    const badge = document.getElementById('history-badge');
+    badge.style.display = n > 0 ? 'flex' : 'none';
+    badge.textContent = n > 99 ? '99+' : n;
+  }
+
+  // ── Detail modal ──────────────────────────────────────────────
   function showDetail(id) {
-    const c = state.captures.find(x => x.id === id);
+    const c = S.captures.find(x => x.id === id);
     if (!c) return;
-
     const mapsUrl = c.lat ? `https://maps.google.com/?q=${c.lat},${c.lng}` : null;
-    const content = `
-      <div class="modal-sub">${esc(c.address)} · ${esc(c.dateStr)}</div>
-      ${mapsUrl ? `<a class="modal-map-link" href="${mapsUrl}" target="_blank" rel="noopener"><svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg> Open in Maps · ${c.lat?.toFixed(5)}, ${c.lng?.toFixed(5)}</a>` : ''}
-      <div class="card">
-        ${c.notes ? `<div style="font-size:14px;white-space:pre-wrap;margin-bottom:12px">${esc(c.notes)}</div>` : '<div style="font-size:13px;color:var(--text-dim);margin-bottom:12px">No notes</div>'}
-        <div class="row">
-          <button class="btn btn-secondary btn-sm" onclick="App.reshareDetail('${id}')">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
-            Share
-          </button>
-          <button class="btn btn-secondary btn-sm" onclick="App.exportSingleCSV(App.getCapture('${id}'))">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-            CSV
-          </button>
-          <button class="btn btn-danger btn-sm" onclick="App.deleteCapture('${id}')">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
-            Delete
-          </button>
-        </div>
+    showModal(c.siteName, `${esc(c.capturedBy)} · ${esc(c.dateStr)}`, `
+      ${mapsUrl ? `<a class="modal-maps-link" href="${mapsUrl}" target="_blank" rel="noopener">📍 Open in Maps · ${c.lat?.toFixed(5)}, ${c.lng?.toFixed(5)}</a>` : ''}
+      <div class="detail-grid">
+        <div class="detail-row"><span class="detail-key">Address</span><span class="detail-val">${esc(c.address)}</span></div>
+        ${c.company ? `<div class="detail-row"><span class="detail-key">Company</span><span class="detail-val">${esc(c.company)}</span></div>` : ''}
+        <div class="detail-row"><span class="detail-key">Notes</span><span class="detail-val" style="text-align:left;max-width:100%;white-space:pre-wrap">${esc(c.notes)||'—'}</span></div>
+        <div class="detail-row"><span class="detail-key">Saved to</span><span class="detail-val">${(c.savedTo||[]).join(', ')||'device'}</span></div>
       </div>
-    `;
-    showModal(c.siteName, '', content);
+      <div class="action-row">
+        <button class="btn btn-secondary btn-sm" onclick="App.reshare('${id}')">Share</button>
+        <button class="btn btn-secondary btn-sm" onclick="App.exportSingleCSV(App.getCapture('${id}'))">CSV</button>
+        <button class="btn btn-danger btn-sm" onclick="App.deleteCapture('${id}')">Delete</button>
+      </div>
+    `);
   }
 
-  function reshareDetail(id) {
-    const c = state.captures.find(x => x.id === id);
-    if (c) shareToNotes(c);
-  }
-
-  function getCapture(id) {
-    return state.captures.find(x => x.id === id);
-  }
+  function reshare(id) { const c = S.captures.find(x => x.id === id); if (c) shareToNotes(c); }
+  function getCapture(id) { return S.captures.find(x => x.id === id); }
 
   // ── Tabs ──────────────────────────────────────────────────────
   function showTab(name) {
-    state.tab = name;
+    S.tab = name;
     document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
     document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
     document.getElementById('screen-' + name).classList.add('active');
@@ -1044,57 +1450,48 @@ const App = (() => {
   }
 
   // ── Modal ─────────────────────────────────────────────────────
-  function showModal(title, subtitle, body) {
-    document.getElementById('modal-content').innerHTML = `
-      <h2>${esc(title)}</h2>
-      ${subtitle ? `<div class="modal-sub">${esc(subtitle)}</div>` : ''}
-      ${body}
-    `;
+  function showModal(title, sub, body) {
+    document.getElementById('modal-content').innerHTML = `<h2>${esc(title)}</h2>${sub ? `<div class="modal-sub">${sub}</div>` : ''}${body}`;
     document.getElementById('modal-overlay').classList.add('show');
   }
+  function closeModal() { document.getElementById('modal-overlay').classList.remove('show'); }
 
-  function closeModal() {
-    document.getElementById('modal-overlay').classList.remove('show');
-  }
-
-  // ── Toast ─────────────────────────────────────────────────────
-  let toastTimer;
+  // ── Toast ──────────────────────────────────────────────────────
+  let _tt;
   function toast(msg, type = 'info') {
     const el = document.getElementById('toast');
-    el.textContent = msg;
-    el.className = `show ${type}`;
-    clearTimeout(toastTimer);
-    toastTimer = setTimeout(() => { el.className = ''; }, 3000);
+    el.textContent = msg; el.className = `show ${type}`;
+    clearTimeout(_tt); _tt = setTimeout(() => { el.className = ''; }, 3200);
   }
 
-  // ── Data management ───────────────────────────────────────────
+  // ── Data wipe ─────────────────────────────────────────────────
   function clearAllData() {
-    if (!confirm('Delete all locally stored captures? This cannot be undone.')) return;
-    state.captures = [];
-    localStorage.removeItem('ss_captures');
-    updateCaptureCount();
-    toast('All local data cleared', 'info');
+    if (!confirm('Delete ALL your captures, profile, and settings from this device?')) return;
+    ['ss_captures','ss_settings','ss_profile'].forEach(k => localStorage.removeItem(k));
+    S.captures = []; S.settings = {}; S.profile = {};
+    refreshProfileUI(); updateHistoryBadge();
+    toast('All data cleared', 'info');
+    document.getElementById('onboarding').style.display = 'flex';
+    document.getElementById('ob-step-1').classList.remove('active');
+    document.getElementById('ob-step-0').classList.add('active');
   }
 
   // ── Helpers ───────────────────────────────────────────────────
-  function esc(s) {
-    return (s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-  }
-  function csvEsc(s) { const v = String(s || ''); return v.includes(',') || v.includes('"') || v.includes('\n') ? `"${v.replace(/"/g,'""')}"` : v; }
+  function esc(s) { return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+  function cesc(s) { const v=String(s||''); return v.includes(',')||v.includes('"')||v.includes('\n')?`"${v.replace(/"/g,'""')}"`:v; }
   function capFirst(s) { return s ? s.charAt(0).toUpperCase() + s.slice(1) : ''; }
-  function formatDate(d) {
-    return d.toLocaleDateString('en-CA', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
-  }
+  function setText(id, v) { const el=document.getElementById(id); if(el) el.textContent=v; }
+  function formatDate(d) { return d.toLocaleDateString('en-CA',{year:'numeric',month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'}); }
 
-  // Public API
   return {
-    init, showTab, toggleDest, applyDestinations,
+    init, showTab, toggleDest, applyDestToggles,
     toggleRecording, saveCapture,
-    refreshLocation, testMonday, testSheets, showSheetsScript,
-    renderHistory, showDetail, reshareDetail, getCapture,
+    refreshLocation, refreshProfileUI, refreshDestUI,
+    saveSetting, testMonday, testSheet, showSheetsScript,
+    renderHistory, showDetail, reshare, getCapture,
     exportAllCSV, exportSingleCSV, deleteCapture,
     clearAllData, showModal, closeModal, toast,
-    saveSetting,
+    obNext, obFinish, obSkip,
   };
 })();
 

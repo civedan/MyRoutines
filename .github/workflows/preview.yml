@@ -1,0 +1,84 @@
+name: Branch Preview
+
+on:
+  push:
+    branches-ignore: [main]
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  preview:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Sanitize branch name
+        id: branch
+        run: |
+          SAFE=$(echo "${{ github.ref_name }}" | sed 's/[^a-zA-Z0-9._-]/-/g')
+          echo "name=$SAFE" >> $GITHUB_OUTPUT
+          echo "url=https://civedan.github.io/MyRoutines/previews/$SAFE/" >> $GITHUB_OUTPUT
+
+      - uses: JamesIves/github-pages-deploy-action@v4
+        with:
+          folder: .
+          branch: gh-pages
+          target-folder: previews/${{ steps.branch.outputs.name }}
+          clean: false
+
+      - name: Find open PR for this branch
+        id: find-pr
+        uses: actions/github-script@v7
+        with:
+          result-encoding: string
+          script: |
+            const prs = await github.rest.pulls.list({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              head: `${context.repo.owner}:${context.ref.replace('refs/heads/', '')}`,
+              state: 'open'
+            });
+            return prs.data.length > 0 ? String(prs.data[0].number) : '';
+
+      - name: Post or update preview comment on PR
+        if: steps.find-pr.outputs.result != ''
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const prNumber = parseInt('${{ steps.find-pr.outputs.result }}');
+            const base = '${{ steps.branch.outputs.url }}';
+            const body = [
+              '## 🔍 Branch Preview',
+              '',
+              '| Page | Preview URL |',
+              '|------|-------------|',
+              `| Site Scout | [construction-capture.html](${base}construction-capture.html) |`,
+              `| Landing page | [index.html](${base}index.html) |`,
+              '',
+              '_Rebuilds automatically on every push to this branch._'
+            ].join('\n');
+
+            const comments = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: prNumber
+            });
+
+            const existing = comments.data.find(c => c.body.includes('🔍 Branch Preview'));
+            if (existing) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: existing.id,
+                body
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: prNumber,
+                body
+              });
+            }

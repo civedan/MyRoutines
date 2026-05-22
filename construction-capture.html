@@ -1389,36 +1389,59 @@ const App = (() => {
   async function testSheet(type) {
     const url = type === 'team' ? S.settings.teamSheetUrl : S.settings.mySheetUrl;
     if (!url) { toast('Enter the Web App URL first', 'error'); return; }
-    toast('Testing…', 'info');
+    toast('Writing a test row…', 'info');
+
+    // Test by actually writing a row — "connected" is useless if writes fail
+    const params = new URLSearchParams({
+      capturedBy: 'Site Scout Test',
+      company: '',
+      siteName: '✓ TEST — delete me',
+      notes: 'Confirms the sheet connection is working.',
+      lat: '', lng: '', address: 'Test',
+      date: formatDate(new Date()),
+      timestamp: new Date().toISOString(),
+      mapsUrl: '',
+    });
+
     try {
-      const r = await fetch(url, { method: 'GET' });
+      const r = await fetch(`${url}?${params.toString()}`, { method: 'GET' });
       const text = await r.text();
-      if (text.includes('Site Scout')) {
-        toast('✓ Connected — sheet is ready', 'success');
+      if (text.trim() === 'ok') {
+        toast('✓ Working — check your sheet for the test row', 'success');
+      } else if (text.startsWith('error:')) {
+        toast(text, 'error');
+      } else if (text.includes('Site Scout')) {
+        toast('Script reached but may not have written — check sheet', 'info');
       } else {
-        toast('Unexpected response — check deployment settings', 'info');
+        toast('Unexpected response: ' + text.slice(0, 60), 'info');
       }
     } catch {
-      // Apps Script URLs often block programmatic fetches due to a CORS redirect.
-      // Open directly in the browser — if the script deployed correctly you'll
-      // see "Site Scout sheet is connected and ready."
-      window.open(url, '_blank');
-      toast('Opening in browser — look for "Site Scout sheet is connected"', 'info');
+      // CORS blocked the response — open URL directly so user can see result
+      window.open(`${url}?${params.toString()}`, '_blank');
+      toast('Opening in browser — check your sheet for the test row', 'info');
     }
   }
 
   function showSheetsScript(type) {
     const isTeam = type === 'team';
-    const script = `function doPost(e) {
+    const script = `function doGet(e) {
+  // No siteName = test ping (returns plain text so browser can verify)
+  if (!e || !e.parameter || !e.parameter.siteName) {
+    return ContentService
+      .createTextOutput('Site Scout sheet is connected and ready.')
+      .setMimeType(ContentService.MimeType.TEXT);
+  }
+
+  // Write the capture row
   try {
     var p = e.parameter;
     var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
 
     if (sheet.getLastRow() === 0) {
       sheet.appendRow([
-        'Captured By','Company','Site Name','Notes',
-        'Latitude','Longitude','Address',
-        'Date','Timestamp','Maps Link'
+        'Captured By', 'Company', 'Site Name', 'Notes',
+        'Latitude', 'Longitude', 'Address',
+        'Date', 'Timestamp', 'Maps Link'
       ]);
     }
 
@@ -1436,25 +1459,14 @@ const App = (() => {
     ]);
 
     return ContentService
-      .createTextOutput(JSON.stringify({ status: 'ok' }))
-      .setMimeType(ContentService.MimeType.JSON);
+      .createTextOutput('ok')
+      .setMimeType(ContentService.MimeType.TEXT);
 
-  } catch(err) {
+  } catch (err) {
     return ContentService
-      .createTextOutput(JSON.stringify({ status: 'error', message: err.toString() }))
-      .setMimeType(ContentService.MimeType.JSON);
-  }
-}
-
-function doGet(e) {
-  // No parameters = test connection ping
-  if (!e || !e.parameter || !e.parameter.siteName) {
-    return ContentService
-      .createTextOutput('Site Scout sheet is connected and ready.')
+      .createTextOutput('error: ' + err.toString())
       .setMimeType(ContentService.MimeType.TEXT);
   }
-  // Parameters present = data submission (same logic as doPost)
-  return doPost(e);
 }`;
     const steps = isTeam
       ? `<div class="info-box" style="margin-bottom:14px"><span class="info-icon">🌐</span><span><strong>One person</strong> on your team sets this up, then shares the URL with everyone else. All team members enter the same URL in "Team Sheet" settings.</span></div>`

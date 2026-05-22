@@ -1385,53 +1385,78 @@ const App = (() => {
   async function testSheet(type) {
     const url = type === 'team' ? S.settings.teamSheetUrl : S.settings.mySheetUrl;
     if (!url) { toast('Enter the Web App URL first', 'error'); return; }
-    toast('Sending test row…', 'info');
+    toast('Testing connection…', 'info');
     try {
-      const name = S.settings.userName || S.profile.name || 'Test User';
-      await fetch(url, {
-        method: 'POST', mode: 'no-cors',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ capturedBy: name, company: '', siteName: 'TEST - Site Scout connection', notes: '', lat: 0, lng: 0, address: 'Test', date: formatDate(new Date()), timestamp: new Date().toISOString(), mapsUrl: '' }),
-      });
-      toast('Sent! Check your sheet for the test row', 'success');
+      // GET hits doGet() — readable response that confirms deployment is live
+      const r = await fetch(url, { method: 'GET' });
+      const text = await r.text();
+      if (text.includes('Site Scout')) {
+        toast('✓ Connected — sheet is ready', 'success');
+      } else {
+        toast('Responded but unexpected reply — check deployment settings', 'info');
+      }
     } catch (e) { toast('Failed: ' + e.message, 'error'); }
   }
 
   function showSheetsScript(type) {
     const isTeam = type === 'team';
     const script = `function doPost(e) {
-  const data = JSON.parse(e.postData.contents);
-  const sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
+  try {
+    var data = JSON.parse(e.postData.contents);
+    var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
 
-  // Add header row on first use
-  if (sheet.getLastRow() === 0) {
+    if (sheet.getLastRow() === 0) {
+      sheet.appendRow([
+        'Captured By','Company','Site Name','Notes',
+        'Latitude','Longitude','Address',
+        'Date','Timestamp','Maps Link'
+      ]);
+    }
+
     sheet.appendRow([
-      'Captured By','Company','Site Name','Notes',
-      'Latitude','Longitude','Address',
-      'Date','Timestamp','Maps Link'
+      data.capturedBy || '',
+      data.company    || '',
+      data.siteName   || '',
+      data.notes      || '',
+      data.lat        || '',
+      data.lng        || '',
+      data.address    || '',
+      data.date       || '',
+      data.timestamp  || '',
+      data.mapsUrl    || ''
     ]);
+
+    return ContentService
+      .createTextOutput(JSON.stringify({ status: 'ok' }))
+      .setMimeType(ContentService.MimeType.JSON);
+
+  } catch(err) {
+    return ContentService
+      .createTextOutput(JSON.stringify({ status: 'error', message: err.toString() }))
+      .setMimeType(ContentService.MimeType.JSON);
   }
+}
 
-  sheet.appendRow([
-    data.capturedBy, data.company, data.siteName, data.notes,
-    data.lat, data.lng, data.address,
-    data.date, data.timestamp, data.mapsUrl
-  ]);
-
+// Open the web app URL in a browser to confirm it deployed correctly
+function doGet() {
   return ContentService
-    .createTextOutput(JSON.stringify({ status: 'ok' }))
-    .setMimeType(ContentService.MimeType.JSON);
+    .createTextOutput('Site Scout sheet is connected and ready.')
+    .setMimeType(ContentService.MimeType.TEXT);
 }`;
     const steps = isTeam
       ? `<div class="info-box" style="margin-bottom:14px"><span class="info-icon">🌐</span><span><strong>One person</strong> on your team sets this up, then shares the URL with everyone else. All team members enter the same URL in "Team Sheet" settings.</span></div>`
       : '';
     showModal(isTeam ? 'Team Sheet Setup' : 'My Sheet Setup', '4 quick steps in Google Apps Script', `
       ${steps}
+      <div class="info-box warning" style="margin-bottom:12px">
+        <span class="info-icon">⚠️</span>
+        <span><strong>Don't click "Run" in the editor</strong> — it will always error because the Run button doesn't send any POST data. The script only works when called over HTTP after deploying.</span>
+      </div>
       <ol style="font-size:13px;color:var(--text-dim);line-height:2;padding-left:18px;margin-bottom:14px">
         <li>Open your Google Sheet → Extensions → Apps Script</li>
-        <li>Replace all code with the template below</li>
-        <li>Click Deploy → New deployment → Web app → Execute as: Me → Who has access: Anyone</li>
-        <li>Copy the Web App URL and paste it in Settings</li>
+        <li>Replace all existing code with the template below</li>
+        <li>Click Deploy → New deployment → Web app → Execute as: <strong>Me</strong> → Who has access: <strong>Anyone</strong></li>
+        <li>Copy the Web App URL and paste it in Settings, then tap "Test Connection"</li>
       </ol>
       <pre>${script}</pre>
     `);

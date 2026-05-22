@@ -918,9 +918,11 @@ const App = (() => {
 
   // ── Init ──────────────────────────────────────────────────────
   function init() {
-    S.settings = load('ss_settings') || {};
-    S.profile  = load('ss_profile')  || {};
-    S.captures = load('ss_captures') || [];
+    S.settings     = load('ss_settings')     || {};
+    S.profile      = load('ss_profile')      || {};
+    S.captures     = load('ss_captures')     || [];
+    const savedDest = load('ss_destinations');
+    if (savedDest) Object.assign(S.destinations, savedDest);
 
     const hasProfile = S.profile.setupComplete;
     if (!hasProfile) {
@@ -1070,6 +1072,7 @@ const App = (() => {
       return;
     }
     S.destinations[key] = !S.destinations[key];
+    save('ss_destinations', S.destinations);
     applyDestToggles();
   }
 

@@ -1,7 +1,5 @@
-// ── CONFIG ── fill these in after creating the Drive folder and Sheet ────────
-var DRIVE_FOLDER_ID = 'YOUR_RECEIPT_PHOTOS_FOLDER_ID_HERE';
-var SHEET_ID        = 'YOUR_GOOGLE_SHEET_ID_HERE';
-// ─────────────────────────────────────────────────────────────────────────────
+var DRIVE_FOLDER_ID = '120k9meYdQ2njgJkkVTyA8AxZTC6NhOTx';   // Areas > Finance > Receipt Photos
+var SHEET_ID        = '1AyxJw7YyaQAnc8Pz41BvoVOqEKXVqz89tr7PSJBMnUA'; // Areas > Finance > Receipt Tracker
 
 function doPost(e) {
   try {

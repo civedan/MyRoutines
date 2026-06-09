@@ -103,52 +103,66 @@
     }
 
     /* File upload area */
-    .file-area {
+    .upload-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .upload-btn-wrap {
       position: relative;
     }
 
-    .file-drop {
-      background: #ffffff;
-      border: 2px dashed #e8e4f0;
-      border-radius: 10px;
-      padding: 22px 14px;
-      text-align: center;
-      cursor: pointer;
-      transition: border-color 0.15s, background 0.15s;
-    }
-
-    .file-drop:hover, .file-drop.dragover {
-      border-color: #a490c2;
-      background: #f5f3fa;
-    }
-
-    .file-drop input[type="file"] {
+    .upload-btn-wrap input[type="file"] {
       position: absolute;
       inset: 0;
       width: 100%;
       height: 100%;
       opacity: 0;
       cursor: pointer;
-      border: none;
-      padding: 0;
+      font-size: 0;
     }
 
-    .file-icon {
-      font-size: 28px;
+    .upload-btn {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      width: 100%;
+      background: #ffffff;
+      border: 2px solid #e8e4f0;
+      border-radius: 10px;
+      padding: 18px 10px;
+      cursor: pointer;
+      transition: border-color 0.15s, background 0.15s;
+      pointer-events: none;
+    }
+
+    .upload-btn-wrap:hover .upload-btn,
+    .upload-btn-wrap.selected .upload-btn {
+      border-color: #a490c2;
+      background: #f5f3fa;
+    }
+
+    .upload-btn-wrap.selected .upload-btn {
+      border-style: solid;
+    }
+
+    .upload-icon {
+      font-size: 26px;
       line-height: 1;
-      margin-bottom: 6px;
     }
 
-    .file-drop-text {
-      font-size: 14px;
-      color: #4a4e8f;
+    .upload-label {
+      font-size: 13px;
       font-weight: 600;
+      color: #4a4e8f;
     }
 
-    .file-drop-hint {
-      font-size: 12px;
+    .upload-hint {
+      font-size: 11px;
       color: #7a6a9a;
-      margin-top: 3px;
     }
 
     .file-name {
@@ -298,17 +312,25 @@
 
       <div class="field">
         <label>Receipt File</label>
-        <div class="file-area">
-          <div class="file-drop" id="fileDrop">
-            <input type="file" id="receipt" name="receipt"
-                   accept="image/*,application/pdf"
-                   capture="environment" required />
-            <div class="file-icon">📎</div>
-            <div class="file-drop-text">Tap to snap or upload</div>
-            <div class="file-drop-hint">Photo or PDF accepted</div>
+        <div class="upload-row">
+          <div class="upload-btn-wrap" id="wrapCamera">
+            <input type="file" id="receiptCamera" accept="image/*" capture="environment" />
+            <div class="upload-btn">
+              <span class="upload-icon">📷</span>
+              <span class="upload-label">Take Photo</span>
+              <span class="upload-hint">Opens camera</span>
+            </div>
           </div>
-          <div class="file-name" id="fileName"></div>
+          <div class="upload-btn-wrap" id="wrapFile">
+            <input type="file" id="receiptFile" accept="image/*,application/pdf" />
+            <div class="upload-btn">
+              <span class="upload-icon">📄</span>
+              <span class="upload-label">Choose File</span>
+              <span class="upload-hint">PDF or photo</span>
+            </div>
+          </div>
         </div>
+        <div class="file-name" id="fileName"></div>
       </div>
 
     </div>
@@ -331,29 +353,28 @@
     const dd = String(today.getDate()).padStart(2, '0');
     dateInput.value = `${yyyy}-${mm}-${dd}`;
 
-    // File pick feedback
-    const receiptInput = document.getElementById('receipt');
-    const fileNameEl = document.getElementById('fileName');
-    const fileDrop = document.getElementById('fileDrop');
+    // File pick feedback — track whichever input was last used
+    const cameraInput = document.getElementById('receiptCamera');
+    const fileInput   = document.getElementById('receiptFile');
+    const wrapCamera  = document.getElementById('wrapCamera');
+    const wrapFile    = document.getElementById('wrapFile');
+    const fileNameEl  = document.getElementById('fileName');
+    let activeFile    = null;
 
-    receiptInput.addEventListener('change', () => {
-      if (receiptInput.files[0]) {
-        fileNameEl.textContent = receiptInput.files[0].name;
-      } else {
-        fileNameEl.textContent = '';
+    function onFilePicked(input, activeWrap, otherWrap) {
+      if (input.files[0]) {
+        activeFile = input.files[0];
+        fileNameEl.textContent = activeFile.name;
+        activeWrap.classList.add('selected');
+        otherWrap.classList.remove('selected');
+        // Clear the other input so only one is ever active
+        if (otherWrap === wrapCamera) cameraInput.value = '';
+        else fileInput.value = '';
       }
-    });
+    }
 
-    fileDrop.addEventListener('dragover', e => { e.preventDefault(); fileDrop.classList.add('dragover'); });
-    fileDrop.addEventListener('dragleave', () => fileDrop.classList.remove('dragover'));
-    fileDrop.addEventListener('drop', e => {
-      e.preventDefault();
-      fileDrop.classList.remove('dragover');
-      if (e.dataTransfer.files[0]) {
-        receiptInput.files = e.dataTransfer.files;
-        fileNameEl.textContent = e.dataTransfer.files[0].name;
-      }
-    });
+    cameraInput.addEventListener('change', () => onFilePicked(cameraInput, wrapCamera, wrapFile));
+    fileInput.addEventListener('change',   () => onFilePicked(fileInput,   wrapFile,   wrapCamera));
 
     // Form submit
     const form = document.getElementById('receiptForm');
@@ -368,7 +389,7 @@
         return;
       }
 
-      const file = receiptInput.files[0];
+      const file = activeFile;
       if (!file) {
         showStatus('error', 'Please select a receipt file.');
         return;
@@ -401,7 +422,10 @@
         if (result.status === 'ok') {
           showStatus('success', 'Receipt logged ✓');
           form.reset();
+          activeFile = null;
           fileNameEl.textContent = '';
+          wrapCamera.classList.remove('selected');
+          wrapFile.classList.remove('selected');
           dateInput.value = `${yyyy}-${mm}-${dd}`;
         } else {
           showStatus('error', 'Error: ' + (result.message || 'Something went wrong.'));

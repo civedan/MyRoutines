@@ -22,32 +22,46 @@ function doPost(e) {
   try {
     var data = JSON.parse(e.postData.contents);
 
-    // Save file to Drive
-    var fileBytes  = Utilities.base64Decode(data.fileData);
-    var blob       = Utilities.newBlob(fileBytes, data.mimeType, data.fileName);
-    var folder     = DriveApp.getFolderById(DRIVE_FOLDER_ID);
-    var driveFile  = folder.createFile(blob);
+    // Step 1: decode file
+    var fileBytes, blob;
+    try {
+      fileBytes = Utilities.base64Decode(data.fileData);
+      blob = Utilities.newBlob(fileBytes, data.mimeType, data.fileName);
+    } catch(err) {
+      return buildResponse({ status: 'error', message: 'Step 1 (decode): ' + err.message });
+    }
 
-    // Make the file viewable by anyone with the link
-    driveFile.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
-    var fileUrl = driveFile.getUrl();
+    // Step 2: save to Drive
+    var driveFile, fileUrl;
+    try {
+      var folder = DriveApp.getFolderById(DRIVE_FOLDER_ID);
+      driveFile  = folder.createFile(blob);
+      driveFile.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+      fileUrl = driveFile.getUrl();
+    } catch(err) {
+      return buildResponse({ status: 'error', message: 'Step 2 (Drive): ' + err.message });
+    }
 
-    // Append row to Sheet
-    var sheet     = SpreadsheetApp.openById(SHEET_ID).getActiveSheet();
-    var submitted = Utilities.formatDate(new Date(), Session.getScriptTimeZone(), 'yyyy-MM-dd HH:mm:ss');
-    sheet.appendRow([
-      data.date,
-      data.company,
-      Number(data.amount),
-      data.description,
-      fileUrl,
-      submitted,
-    ]);
+    // Step 3: log to Sheet
+    try {
+      var sheet     = SpreadsheetApp.openById(SHEET_ID).getActiveSheet();
+      var submitted = Utilities.formatDate(new Date(), Session.getScriptTimeZone(), 'yyyy-MM-dd HH:mm:ss');
+      sheet.appendRow([
+        data.date,
+        data.company,
+        Number(data.amount),
+        data.description,
+        fileUrl,
+        submitted,
+      ]);
+    } catch(err) {
+      return buildResponse({ status: 'error', message: 'Step 3 (Sheet): ' + err.message });
+    }
 
     return buildResponse({ status: 'ok' });
 
   } catch (err) {
-    return buildResponse({ status: 'error', message: err.message });
+    return buildResponse({ status: 'error', message: 'Parse error: ' + err.message });
   }
 }
 

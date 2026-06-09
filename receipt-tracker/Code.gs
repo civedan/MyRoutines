@@ -33,24 +33,19 @@ function doPost(e) {
 
     // Step 2: save to Drive
     var driveFile, fileUrl;
-    var debugInfo = 'mime=' + data.mimeType + ' bytes=' + fileBytes.length;
-    try {
-      var folder = DriveApp.getFolderById(DRIVE_FOLDER_ID);
-    } catch(err) {
-      return buildResponse({ status: 'error', message: 'Step 2a (getFolder): ' + err.message + ' | ' + debugInfo });
-    }
     try {
       var folder = DriveApp.getFolderById(DRIVE_FOLDER_ID);
       driveFile  = folder.createFile(blob);
+      fileUrl    = driveFile.getUrl();
     } catch(err) {
-      return buildResponse({ status: 'error', message: 'Step 2b (createFile): ' + err.message + ' | ' + debugInfo });
+      return buildResponse({ status: 'error', message: 'Step 2 (Drive): ' + err.message });
     }
+
+    // Best-effort: make the file link-shareable. PDFs may be locked briefly
+    // by Drive's virus scanner — skip silently if it fails.
     try {
       driveFile.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
-      fileUrl = driveFile.getUrl();
-    } catch(err) {
-      return buildResponse({ status: 'error', message: 'Step 2c (setSharing): ' + err.message + ' | ' + debugInfo });
-    }
+    } catch(e) { /* non-fatal */ }
 
     // Step 3: log to Sheet
     try {

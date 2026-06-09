@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <title>Receipt Tracker</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: #ffffff;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      font-size: 16px;
+      line-height: 1.6;
+      color: #1a1a2e;
+      min-height: 100vh;
+      padding: 24px 16px 48px;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 28px;
+    }
+
+    header h1 {
+      font-size: 26px;
+      font-weight: 700;
+      color: #2b1e3e;
+      letter-spacing: -0.3px;
+    }
+
+    header p {
+      font-size: 13px;
+      color: #7a6a9a;
+      margin-top: 4px;
+    }
+
+    .card {
+      background: #f5f3fa;
+      border: 1px solid #e8e4f0;
+      border-radius: 16px;
+      padding: 24px 20px;
+      max-width: 480px;
+      margin: 0 auto;
+    }
+
+    .field {
+      margin-bottom: 20px;
+    }
+
+    .field:last-child {
+      margin-bottom: 0;
+    }
+
+    label {
+      display: block;
+      font-size: 10px;
+      font-weight: 600;
+      color: #a490c2;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      margin-bottom: 7px;
+    }
+
+    input, select, textarea {
+      width: 100%;
+      background: #ffffff;
+      border: 1px solid #e8e4f0;
+      border-radius: 10px;
+      padding: 12px 14px;
+      font-size: 16px;
+      color: #1a1a2e;
+      font-family: inherit;
+      outline: none;
+      transition: border-color 0.15s;
+      -webkit-appearance: none;
+      appearance: none;
+    }
+
+    input:focus, select:focus, textarea:focus {
+      border-color: #a490c2;
+    }
+
+    /* Custom select arrow */
+    .select-wrapper {
+      position: relative;
+    }
+
+    .select-wrapper::after {
+      content: "";
+      pointer-events: none;
+      position: absolute;
+      right: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 0;
+      height: 0;
+      border-left: 5px solid transparent;
+      border-right: 5px solid transparent;
+      border-top: 6px solid #a490c2;
+    }
+
+    /* File upload area */
+    .file-area {
+      position: relative;
+    }
+
+    .file-drop {
+      background: #ffffff;
+      border: 2px dashed #e8e4f0;
+      border-radius: 10px;
+      padding: 22px 14px;
+      text-align: center;
+      cursor: pointer;
+      transition: border-color 0.15s, background 0.15s;
+    }
+
+    .file-drop:hover, .file-drop.dragover {
+      border-color: #a490c2;
+      background: #f5f3fa;
+    }
+
+    .file-drop input[type="file"] {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      opacity: 0;
+      cursor: pointer;
+      border: none;
+      padding: 0;
+    }
+
+    .file-icon {
+      font-size: 28px;
+      line-height: 1;
+      margin-bottom: 6px;
+    }
+
+    .file-drop-text {
+      font-size: 14px;
+      color: #4a4e8f;
+      font-weight: 600;
+    }
+
+    .file-drop-hint {
+      font-size: 12px;
+      color: #7a6a9a;
+      margin-top: 3px;
+    }
+
+    .file-name {
+      font-size: 13px;
+      color: #4a4e8f;
+      margin-top: 8px;
+      font-weight: 500;
+      word-break: break-all;
+    }
+
+    /* Amount prefix */
+    .amount-wrapper {
+      position: relative;
+    }
+
+    .amount-prefix {
+      position: absolute;
+      left: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 16px;
+      color: #7a6a9a;
+      pointer-events: none;
+      font-weight: 500;
+    }
+
+    .amount-wrapper input {
+      padding-left: 28px;
+    }
+
+    /* Submit button */
+    .btn-submit {
+      display: block;
+      width: 100%;
+      max-width: 480px;
+      margin: 20px auto 0;
+      background: #4a4e8f;
+      color: #ffffff;
+      border: none;
+      border-radius: 12px;
+      padding: 16px;
+      font-size: 17px;
+      font-weight: 700;
+      letter-spacing: 0.3px;
+      cursor: pointer;
+      transition: opacity 0.15s, transform 0.1s;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .btn-submit:active {
+      opacity: 0.85;
+      transform: scale(0.98);
+    }
+
+    .btn-submit:disabled {
+      opacity: 0.55;
+      cursor: not-allowed;
+    }
+
+    /* Status messages */
+    .status {
+      max-width: 480px;
+      margin: 16px auto 0;
+      border-radius: 12px;
+      padding: 14px 18px;
+      font-size: 15px;
+      text-align: center;
+      display: none;
+    }
+
+    .status.success {
+      display: block;
+      background: #eef4ee;
+      border: 1px solid #b5d5b5;
+      color: #2d6a2d;
+      font-weight: 600;
+    }
+
+    .status.error {
+      display: block;
+      background: #fdf0f0;
+      border: 1px solid #e8b5b5;
+      color: #8b2020;
+    }
+
+    .spinner {
+      display: inline-block;
+      width: 18px;
+      height: 18px;
+      border: 3px solid rgba(255,255,255,0.4);
+      border-top-color: #ffffff;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      vertical-align: middle;
+      margin-right: 8px;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    @media (max-width: 360px) {
+      body { padding: 16px 12px 40px; }
+      .card { padding: 20px 16px; }
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>Receipt Tracker</h1>
+    <p>Blue Anvil &amp; TLC Victoria</p>
+  </header>
+
+  <form id="receiptForm" novalidate>
+    <div class="card">
+
+      <div class="field">
+        <label for="date">Date</label>
+        <input type="date" id="date" name="date" required />
+      </div>
+
+      <div class="field">
+        <label for="company">Company</label>
+        <div class="select-wrapper">
+          <select id="company" name="company" required>
+            <option value="">Select company…</option>
+            <option value="Blue Anvil">Blue Anvil</option>
+            <option value="TLC">TLC</option>
+            <option value="Both">Both</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="amount">Amount</label>
+        <div class="amount-wrapper">
+          <span class="amount-prefix">$</span>
+          <input type="number" id="amount" name="amount" placeholder="0.00"
+                 min="0" step="0.01" inputmode="decimal" required />
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="description">Description</label>
+        <input type="text" id="description" name="description"
+               placeholder="What was this expense for?" required />
+      </div>
+
+      <div class="field">
+        <label>Receipt File</label>
+        <div class="file-area">
+          <div class="file-drop" id="fileDrop">
+            <input type="file" id="receipt" name="receipt"
+                   accept="image/*,application/pdf"
+                   capture="environment" required />
+            <div class="file-icon">📎</div>
+            <div class="file-drop-text">Tap to snap or upload</div>
+            <div class="file-drop-hint">Photo or PDF accepted</div>
+          </div>
+          <div class="file-name" id="fileName"></div>
+        </div>
+      </div>
+
+    </div>
+
+    <button type="submit" class="btn-submit" id="submitBtn">Submit Receipt</button>
+  </form>
+
+  <div class="status" id="statusMsg"></div>
+
+  <script>
+    // ── CONFIG ── paste your values here after deploying the Apps Script ──────
+    const APPS_SCRIPT_URL = 'https://script.google.com/a/macros/blueanvil.ca/s/AKfycbywGHCsDIVHASJJRYZAs4A8QL0z6GJCQl7QBTgPB7gIRnwg2c6rvnxVvfkj7KslsRAglw/exec';
+    // ─────────────────────────────────────────────────────────────────────────
+
+    // Default date to today
+    const dateInput = document.getElementById('date');
+    const today = new Date();
+    const yyyy = today.getFullYear();
+    const mm = String(today.getMonth() + 1).padStart(2, '0');
+    const dd = String(today.getDate()).padStart(2, '0');
+    dateInput.value = `${yyyy}-${mm}-${dd}`;
+
+    // File pick feedback
+    const receiptInput = document.getElementById('receipt');
+    const fileNameEl = document.getElementById('fileName');
+    const fileDrop = document.getElementById('fileDrop');
+
+    receiptInput.addEventListener('change', () => {
+      if (receiptInput.files[0]) {
+        fileNameEl.textContent = receiptInput.files[0].name;
+      } else {
+        fileNameEl.textContent = '';
+      }
+    });
+
+    fileDrop.addEventListener('dragover', e => { e.preventDefault(); fileDrop.classList.add('dragover'); });
+    fileDrop.addEventListener('dragleave', () => fileDrop.classList.remove('dragover'));
+    fileDrop.addEventListener('drop', e => {
+      e.preventDefault();
+      fileDrop.classList.remove('dragover');
+      if (e.dataTransfer.files[0]) {
+        receiptInput.files = e.dataTransfer.files;
+        fileNameEl.textContent = e.dataTransfer.files[0].name;
+      }
+    });
+
+    // Form submit
+    const form = document.getElementById('receiptForm');
+    const submitBtn = document.getElementById('submitBtn');
+    const statusMsg = document.getElementById('statusMsg');
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      if (!APPS_SCRIPT_URL || APPS_SCRIPT_URL === 'YOUR_APPS_SCRIPT_WEB_APP_URL_HERE') {
+        showStatus('error', 'Apps Script URL not configured. See SETUP.md for instructions.');
+        return;
+      }
+
+      const file = receiptInput.files[0];
+      if (!file) {
+        showStatus('error', 'Please select a receipt file.');
+        return;
+      }
+
+      setLoading(true);
+      statusMsg.className = 'status';
+
+      try {
+        const base64 = await readFileAsBase64(file);
+
+        const payload = {
+          date: dateInput.value,
+          company: document.getElementById('company').value,
+          amount: document.getElementById('amount').value,
+          description: document.getElementById('description').value,
+          fileName: file.name,
+          mimeType: file.type || 'application/octet-stream',
+          fileData: base64,
+        };
+
+        const response = await fetch(APPS_SCRIPT_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify(payload),
+        });
+
+        const result = await response.json();
+
+        if (result.status === 'ok') {
+          showStatus('success', 'Receipt logged ✓');
+          form.reset();
+          fileNameEl.textContent = '';
+          dateInput.value = `${yyyy}-${mm}-${dd}`;
+        } else {
+          showStatus('error', 'Error: ' + (result.message || 'Something went wrong.'));
+        }
+      } catch (err) {
+        showStatus('error', 'Network error — please try again. (' + err.message + ')');
+      } finally {
+        setLoading(false);
+      }
+    });
+
+    function readFileAsBase64(file) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => {
+          // Remove the data URL prefix (e.g. "data:image/jpeg;base64,")
+          resolve(reader.result.split(',')[1]);
+        };
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+    }
+
+    function setLoading(isLoading) {
+      submitBtn.disabled = isLoading;
+      submitBtn.innerHTML = isLoading
+        ? '<span class="spinner"></span>Submitting…'
+        : 'Submit Receipt';
+    }
+
+    function showStatus(type, message) {
+      statusMsg.className = 'status ' + type;
+      statusMsg.textContent = message;
+      statusMsg.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+  </script>
+
+</body>
+</html>

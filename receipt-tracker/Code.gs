@@ -1,6 +1,23 @@
 var DRIVE_FOLDER_ID = '120k9meYdQ2njgJkkVTyA8AxZTC6NhOTx';   // Areas > Finance > Receipt Photos
 var SHEET_ID        = '1AyxJw7YyaQAnc8Pz41BvoVOqEKXVqz89tr7PSJBMnUA'; // Areas > Finance > Receipt Tracker
 
+// ── Run this ONCE from the Apps Script editor to create the Drive folder and
+//    Sheet inside whichever Google account owns this script, then copy the
+//    logged IDs into the two variables above. ─────────────────────────────────
+function setup() {
+  var folder = DriveApp.createFolder('Receipt Photos');
+  Logger.log('DRIVE_FOLDER_ID: ' + folder.getId());
+
+  var ss = SpreadsheetApp.create('Receipt Tracker');
+  var sheet = ss.getActiveSheet();
+  sheet.appendRow(['Date', 'Company', 'Amount', 'Description', 'Receipt Link', 'Submitted']);
+  sheet.setFrozenRows(1);
+  Logger.log('SHEET_ID: ' + ss.getId());
+
+  Logger.log('--- Paste both IDs into the top of Code.gs then redeploy. ---');
+}
+// ─────────────────────────────────────────────────────────────────────────────
+
 function doPost(e) {
   try {
     var data = JSON.parse(e.postData.contents);

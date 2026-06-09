@@ -1,5 +1,5 @@
-var DRIVE_FOLDER_ID = '120k9meYdQ2njgJkkVTyA8AxZTC6NhOTx';   // Areas > Finance > Receipt Photos
-var SHEET_ID        = '1AyxJw7YyaQAnc8Pz41BvoVOqEKXVqz89tr7PSJBMnUA'; // Areas > Finance > Receipt Tracker
+var DRIVE_FOLDER_ID = '1BEgk29RwoL6YcbKLCPMYiiJrE8IS5EJZ';
+var SHEET_ID        = '1IZbykMH2fpT71H9knW6VZWcTmlFIfPTNkUsAKo4kNBQ';
 
 // ── Run this ONCE from the Apps Script editor to create the Drive folder and
 //    Sheet inside whichever Google account owns this script, then copy the

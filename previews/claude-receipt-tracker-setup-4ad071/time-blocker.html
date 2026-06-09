@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Day Planner</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: system-ui, sans-serif; background: #0f1117; color: #e8eaf0; min-height: 100vh; padding: 20px 16px; }
+  h1 { font-size: 26px; font-weight: 700; margin: 4px 0 0; }
+  .subtitle { font-size: 13px; color: #6c7a9c; margin-top: 4px; }
+  .label { font-size: 11px; letter-spacing: 2px; color: #6c7a9c; text-transform: uppercase; margin-bottom: 10px; }
+  .date-label { font-size: 11px; letter-spacing: 3px; color: #6c7a9c; text-transform: uppercase; }
+  .wrap { max-width: 740px; margin: 0 auto; }
+  .block-btns { display: flex; gap: 8px; align-items: center; margin: 20px 0; }
+  .block-btn { padding: 5px 16px; border-radius: 8px; border: none; cursor: pointer; font-size: 13px; font-weight: 600; background: #1e2130; color: #8892b0; }
+  .block-btn.active { background: #4f8ef7; color: #fff; }
+  .grid { display: grid; grid-template-columns: 1fr 250px; gap: 20px; }
+  .timeline-row { display: flex; margin-bottom: 3px; }
+  .hour-label { width: 52px; font-size: 11px; color: #4a5568; padding-top: 13px; flex-shrink: 0; }
+  .slot { flex: 1; min-height: 44px; border-radius: 8px; border: 1px dashed #2a2f45; background: #161b27; position: relative; transition: background 0.1s; }
+  .slot.covered { border-color: transparent; background: transparent; }
+  .slot.drag-over { background: #1a2540; border-color: #4f8ef7; }
+  .block-item { position: absolute; inset: 0; border-radius: 8px; padding: 10px 12px; display: flex; align-items: center; justify-content: space-between; cursor: grab; }
+  .block-title { font-size: 13px; font-weight: 600; }
+  .block-meta { font-size: 11px; color: #6c7a9c; margin-top: 2px; }
+  .sidebar { display: flex; flex-direction: column; gap: 14px; }
+  .card { background: #161b27; border-radius: 12px; padding: 14px; }
+  .add-row { display: flex; gap: 8px; }
+  input[type=text] { flex: 1; background: #0f1117; border: 1px solid #2a2f45; border-radius: 8px; padding: 8px 10px; color: #e8eaf0; font-size: 13px; outline: none; }
+  .add-btn { background: #4f8ef7; border: none; border-radius: 8px; color: #fff; padding: 8px 14px; cursor: pointer; font-weight: 700; font-size: 16px; }
+  .import-toggle { background: none; border: none; color: #4f8ef7; cursor: pointer; font-size: 13px; font-weight: 600; padding: 0; }
+  select { width: 100%; background: #0f1117; border: 1px solid #2a2f45; border-radius: 8px; padding: 7px 8px; color: #e8eaf0; font-size: 12px; margin-bottom: 8px; outline: none; }
+  .import-btn { width: 100%; background: #1e2a40; border: 1px solid #4f8ef744; border-radius: 8px; padding: 8px 10px; color: #a8c0f0; font-size: 12px; cursor: pointer; text-align: left; margin-bottom: 5px; }
+  .import-btn.added { background: #1a1f2e; border-color: #2a2f45; color: #4a5568; cursor: default; }
+  .task-item { display: flex; align-items: center; gap: 8px; padding: 9px 10px; border-radius: 8px; background: #0f1117; margin-bottom: 6px; cursor: grab; }
+  .task-label { flex: 1; font-size: 13px; color: #c8d0e0; }
+  .remove-btn { background: none; border: none; color: #4a5568; cursor: pointer; font-size: 18px; line-height: 1; padding: 0 2px; }
+  .footer { margin-top: 16px; font-size: 11px; color: #2a3050; text-align: center; }
+  @media (max-width: 600px) { .grid { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div style="margin-bottom:24px">
+    <div class="date-label" id="dateLabel"></div>
+    <h1>Day Planner</h1>
+    <div class="subtitle" id="subtitle">0h scheduled · 0 tasks remaining</div>
+  </div>
+
+  <div class="block-btns">
+    <span style="font-size:12px;color:#6c7a9c">Block size:</span>
+    <button class="block-btn active" onclick="setBlockSize(1)" id="btn1">1h</button>
+    <button class="block-btn" onclick="setBlockSize(2)" id="btn2">2h</button>
+    <button class="block-btn" onclick="setBlockSize(3)" id="btn3">3h</button>
+  </div>
+
+  <div class="grid">
+    <div>
+      <div class="label">Timeline — drag tasks here</div>
+      <div id="timeline"></div>
+    </div>
+    <div class="sidebar">
+      <div class="card">
+        <div class="label">Add Task</div>
+        <div class="add-row">
+          <input type="text" id="taskInput" placeholder="Type a task..." onkeydown="if(event.key==='Enter')addTask()">
+          <button class="add-btn" onclick="addTask()">+</button>
+        </div>
+      </div>
+      <div class="card">
+        <button class="import-toggle" onclick="toggleImport()">▸ Import from Reminders</button>
+        <div id="importPanel" style="display:none;margin-top:10px">
+          <select id="listSelect" onchange="renderImportList()"></select>
+          <div id="importList"></div>
+        </div>
+      </div>
+      <div class="card" style="flex:1">
+        <div class="label">Tasks (<span id="taskCount">0</span>)</div>
+        <div id="taskPool"></div>
+      </div>
+    </div>
+  </div>
+  <div class="footer">Select block size · Drag tasks onto the timeline · Drag blocks to reschedule</div>
+</div>
+
+<script>
+const REMINDERS = {
+  "Work Admin": ["Aged AR", "Timesheet", "Expenses", "Monthly PreBills"],
+  "YBN - Membership": ["Get new website developed", "Monthly newsletter template setup"],
+  "Skywater Landing": ["Final Schedule C-B for the Project", "All design notes and files in folder"],
+  "2180 Beacon": ["Post Design Review", "Exterior Structure Design"],
+  "Village Green": ["Schedule C-B for the Project", "Design notes in folder", "Pergola Review"],
+  "Tillicum Townhouse": ["Complete Seismic Redesign"],
+  "Shelbourne Townhouses": ["Sign and Seal the IFC Set"],
+  "INBOX": ["Sooke River Hotel - Review w/ Waymark", "Email McKenzie about RRSPs", "Look up McKenzie email"]
+};
+
+const COLORS = ["#4f8ef7","#f7834f","#4fc97a","#c94f8e","#f7c94f","#4fc9c9","#9b4ff7","#f74f4f"];
+const HOURS = Array.from({length:14},(_,i)=>i+7);
+
+let tasks = [], blocks = {}, blockSize = 1, dragData = null, colorIdx = 0;
+
+function nextColor(){ return COLORS[(colorIdx++)%COLORS.length]; }
+function fmtHour(h){ if(h===12)return"12 PM"; return h>12?`${h-12} PM`:`${h} AM`; }
+
+function setBlockSize(s){
+  blockSize=s;
+  [1,2,3].forEach(n=>{ document.getElementById('btn'+n).className='block-btn'+(n===s?' active':''); });
+}
+
+function addTask(){
+  const inp=document.getElementById('taskInput');
+  const label=inp.value.trim();
+  if(!label)return;
+  tasks.push({id:Date.now(),label,color:nextColor()});
+  inp.value='';
+  render();
+}
+
+function importTask(label){
+  if(tasks.find(t=>t.label===label))return;
+  tasks.push({id:Date.now()+Math.random(),label,color:nextColor()});
+  render();
+  renderImportList();
+}
+
+function removeTask(id){
+  tasks=tasks.filter(t=>t.id!==id);
+  Object.keys(blocks).forEach(k=>{ if(blocks[k]&&blocks[k].taskId===id) delete blocks[k]; });
+  render();
+}
+
+function removeBlock(key){
+  delete blocks[key];
+  render();
+}
+
+function occupiedHours(){
+  const s=new Set();
+  Object.entries(blocks).forEach(([k,v])=>{
+    const [h,sz]=k.split('-').map(Number);
+    for(let i=0;i<sz;i++) s.add(h+i);
+  });
+  return s;
+}
+
+function canDrop(hour){
+  const occ=occupiedHours();
+  for(let i=0;i<blockSize;i++){
+    if(occ.has(hour+i)){
+      // check if it belongs to the dragged task's own block
+      const ownKey=Object.keys(blocks).find(k=>{
+        const [h,sz]=k.split('-').map(Number);
+        return blocks[k].taskId===dragData?.id && hour+i>=h && hour+i<h+sz;
+      });
+      if(!ownKey) return false;
+    }
+  }
+  return true;
+}
+
+function onDrop(hour){
+  if(!dragData||!canDrop(hour))return;
+  if(dragData.fromKey) delete blocks[dragData.fromKey];
+  blocks[`${hour}-${blockSize}`]={taskId:dragData.id,label:dragData.label,color:dragData.color,size:blockSize};
+  dragData=null;
+  render();
+}
+
+function toggleImport(){
+  const p=document.getElementById('importPanel');
+  const btn=document.querySelector('.import-toggle');
+  const open=p.style.display==='none';
+  p.style.display=open?'block':'none';
+  btn.textContent=(open?'▾':'▸')+' Import from Reminders';
+  if(open){
+    const sel=document.getElementById('listSelect');
+    if(!sel.options.length){
+      Object.keys(REMINDERS).forEach(l=>{ const o=document.createElement('option'); o.value=o.textContent=l; sel.appendChild(o); });
+    }
+    renderImportList();
+  }
+}
+
+function renderImportList(){
+  const list=REMINDERS[document.getElementById('listSelect').value]||[];
+  const div=document.getElementById('importList');
+  div.innerHTML='';
+  list.forEach(r=>{
+    const added=!!tasks.find(t=>t.label===r);
+    const btn=document.createElement('button');
+    btn.className='import-btn'+(added?' added':'');
+    btn.textContent=(added?'✓ ':'+ ')+r;
+    btn.disabled=added;
+    btn.onclick=()=>importTask(r);
+    div.appendChild(btn);
+  });
+}
+
+function render(){
+  const occ=occupiedHours();
+  const scheduledIds=new Set(Object.values(blocks).map(b=>b.taskId));
+  const unscheduled=tasks.filter(t=>!scheduledIds.has(t.id));
+  const totalHours=Object.values(blocks).reduce((s,b)=>s+b.size,0);
+
+  document.getElementById('subtitle').textContent=`${totalHours}h scheduled · ${unscheduled.length} task${unscheduled.length!==1?'s':''} remaining`;
+  document.getElementById('taskCount').textContent=unscheduled.length;
+
+  // Timeline
+  const tl=document.getElementById('timeline');
+  tl.innerHTML='';
+  HOURS.forEach(hour=>{
+    const blockEntry=Object.entries(blocks).find(([k])=>Number(k.split('-')[0])===hour);
+    const isCovered=occ.has(hour)&&!blockEntry;
+
+    const row=document.createElement('div');
+    row.className='timeline-row';
+
+    const lbl=document.createElement('div');
+    lbl.className='hour-label';
+    lbl.textContent=fmtHour(hour);
+
+    const slot=document.createElement('div');
+    slot.className='slot'+(isCovered?' covered':'');
+    slot.addEventListener('dragover',e=>{ if(!isCovered){e.preventDefault();slot.classList.add('drag-over');}});
+    slot.addEventListener('dragleave',()=>slot.classList.remove('drag-over'));
+    slot.addEventListener('drop',()=>{ slot.classList.remove('drag-over'); onDrop(hour); });
+
+    if(blockEntry){
+      const [key,val]=blockEntry;
+      const item=document.createElement('div');
+      item.className='block-item';
+      item.draggable=true;
+      item.style.background=val.color+'20';
+      item.style.borderLeft=`3px solid ${val.color}`;
+      item.innerHTML=`<div><div class="block-title">${val.label}</div><div class="block-meta">${val.size}h · ${fmtHour(hour)} – ${fmtHour(hour+val.size)}</div></div>`;
+      item.addEventListener('dragstart',()=>{ dragData={id:val.taskId,label:val.label,color:val.color,fromKey:key}; });
+      const x=document.createElement('button');
+      x.className='remove-btn'; x.textContent='×';
+      x.onclick=()=>removeBlock(key);
+      item.appendChild(x);
+      slot.appendChild(item);
+    }
+
+    row.appendChild(lbl);
+    row.appendChild(slot);
+    tl.appendChild(row);
+  });
+
+  // Task pool
+  const pool=document.getElementById('taskPool');
+  pool.innerHTML='';
+  if(unscheduled.length===0&&tasks.length>0){
+    pool.innerHTML='<div style="font-size:12px;color:#4fc97a;font-style:italic">🎉 All tasks scheduled!</div>';
+  } else if(tasks.length===0){
+    pool.innerHTML='<div style="font-size:12px;color:#4a5568;font-style:italic">Add or import tasks above</div>';
+  }
+  unscheduled.forEach(task=>{
+    const item=document.createElement('div');
+    item.className='task-item';
+    item.draggable=true;
+    item.style.borderLeft=`3px solid ${task.color}`;
+    item.style.border=`1px solid ${task.color}33`;
+    item.style.borderLeft=`3px solid ${task.color}`;
+    item.innerHTML=`<div class="task-label">${task.label}</div>`;
+    item.addEventListener('dragstart',()=>{ dragData={id:task.id,label:task.label,color:task.color,fromKey:null}; });
+    const x=document.createElement('button');
+    x.className='remove-btn'; x.textContent='×';
+    x.onclick=()=>removeTask(task.id);
+    item.appendChild(x);
+    pool.appendChild(item);
+  });
+}
+
+// Date label
+const d=new Date();
+document.getElementById('dateLabel').textContent=d.toLocaleDateString('en-CA',{weekday:'long',month:'long',day:'numeric'});
+
+render();
+</script>
+</body>
+</html>
